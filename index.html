@@ -926,17 +926,21 @@ select.form-input { cursor: pointer; }
 }
 
 @media (max-width: 540px) {
+@media (max-width: 540px) {
   .side-panel { width: 100%; max-width: 100vw; }
   .home-brand h1 { font-size: 1.4rem; }
 
-  /* Mobile Sidebar Toggle */
-  .sidebar-toggle { display: none; }
+  /* ================= PERBAIKAN SIDEBAR HP ================= */
+  .sidebar-toggle { 
+    display: flex; /* Dari aslinya 'display: none' yang bikin tombol ilang */
+  }
+
   .editor-sidebar {
     position: fixed;
     top: 0;
     left: -260px;
     width: 250px;
-    height: 100px;
+    height: 100vh; /* Dari aslinya '100px' yang bikin sidebar kepotong */
     z-index: 80;
     transition: left 0.25s ease;
     background: var(--bg-secondary);
@@ -955,29 +959,42 @@ select.form-input { cursor: pointer; }
   }
   .sidebar-backdrop-mobile.show { display: block; }
 
-    /* Teks vertikal di HP */
+  /* ================= TEKS VERTIKAL & GARIS ================= */
   .table-wrap { overflow-x: hidden; }
   
-  /* Sembunyikan header tabel biasa */
-  .trans-table thead { display: none; }
-  
-  /* Ubah baris tabel jadi kartu vertikal menggunakan Flexbox */
+  .trans-table thead { display: none; } /* Sembunyikan header tabel */
+
   .trans-table tbody tr {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Ini yang bikin jadi vertikal */
     position: relative;
     padding: 12px 45px 12px 12px; /* Kasih ruang kanan buat checkbox */
-    margin-bottom: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-card-solid);
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-color); /* Garis pemisah antar baris */
+    background: transparent;
   }
-  .trans-table tbody tr:hover td { background: transparent; } /* Hilangkan efek hover lama */
+  
+  /* Hilangkan garis bawaan td biar nggak dobel dengan garis tr */
+  .trans-table td { 
+    border-bottom: none !important; 
+  }
+  .trans-table tbody tr:hover td { 
+    background: transparent; 
+  }
 
-  /* Sembunyikan kolom nomor (#) dan icon status di HP biar nggak makan tempat */
-  .col-num, .col-status { display: none; }
+  /* Sembunyikan hanya icon status (centang/pensil) */
+  .col-status { display: none; }
 
-  /* Posisikan checkbox melayang di pojok kanan atas */
+  /* Tampilkan nomor baris, tapi dibuat kecil dan rata kiri */
+  .col-num {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 0 0 4px 0 !important;
+    text-align: left !important;
+    font-weight: 600;
+  }
+
+  /* Checkbox melayang di pojok kanan atas */
   .col-check {
     position: absolute;
     top: 12px;
@@ -986,21 +1003,24 @@ select.form-input { cursor: pointer; }
     padding: 0 !important;
   }
 
-  /* Buat teks asli dan terjemahan full lebar dan bertumpuk */
+  /* Lebar teks jadi full */
   .col-original, .col-translated {
     max-width: 100% !important;
     width: 100% !important;
     padding: 6px 0 !important;
   }
 
-  /* Bikin inputan terjemahan kelihatan jelas sebagai kotak terpisah */
+  /* Kotak translate dibuat lebih besar */
   .col-translated input {
     width: 100%;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 10px 12px !important;
+    padding: 14px 16px !important;
+    min-height: 60px;
+    font-size: 0.9rem;
   }
+}
 </style>
 </head>
 <body>
