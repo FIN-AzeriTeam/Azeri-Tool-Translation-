@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPGTrans - Game Translation Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ==========================================
+   RESET & CSS VARIABLES
+   ========================================== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-main: #06061a;
+  --bg-secondary: #0c0c28;
+  --bg-card: rgba(14, 14, 52, 0.7);
+  --bg-card-solid: #0e0e34;
+  --bg-card-hover: rgba(20, 20, 68, 0.8);
+  --bg-input: #080820;
+  --border-color: rgba(45, 45, 110, 0.35);
+  --border-hover: rgba(65, 65, 140, 0.5);
+  --text-primary: #e4e4f8;
+  --text-secondary: #9898c0;
+  --text-muted: #5a5a88;
+  --accent: #e89830;
+  --accent-hover: #d48020;
+  --accent-glow: rgba(232, 152, 48, 0.15);
+  --color-success: #18c870;
+  --color-error: #f03838;
+  --color-info: #3888f0;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
+  --transition-speed: 0.2s ease;
+}
+
+/* ==========================================
+   BASE STYLES
+   ========================================== */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  background: var(--bg-main);
+  background-image:
+    radial-gradient(ellipse at 15% 50%, rgba(20, 20, 80, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 15%, rgba(50, 20, 70, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(20, 40, 80, 0.15) 0%, transparent 40%);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+/* ==========================================
+   BUTTONS
+   ========================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all var(--transition-speed);
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary:hover {
+  background: var(--bg-card-solid);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.btn-danger {
+  background: var(--color-error);
+  color: #fff;
+}
+.btn-danger:hover { background: #d02828; }
+
+.btn-small {
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-solid);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  transition: all var(--transition-speed);
+}
+.btn-icon:hover {
+  background: #161650;
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* ==========================================
+   FORM ELEMENTS
+   ========================================== */
+.form-group { margin-bottom: 18px; }
+
+.form-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: border-color var(--transition-speed);
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-input::placeholder { color: var(--text-muted); }
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+  line-height: 1.6;
+}
+
+select.form-input { cursor: pointer; }
+
+.form-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 16px 0;
+}
+
+.lang-tag {
+  font-size: 0.62rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--accent-glow);
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* ==========================================
+   HOME PAGE
+   ========================================== */
+#homePage {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.home-header {
+  padding: 28px 32px 0;
+  flex-shrink: 0;
+}
+
+.home-brand h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent) 0%, #f0c050 50%, var(--accent) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+
+.home-brand p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.home-actions {
+  padding: 20px 32px;
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.home-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 32px 32px;
+}
+
+.home-stats {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.home-stats b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+.search-wrap i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.search-wrap .form-input { padding-left: 40px; }
+
+/* Project Grid */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.project-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  transition: all var(--transition-speed);
+}
+.project-card:hover {
+  border-color: rgba(232, 152, 48, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(232, 152, 48, 0.08);
+}
+
+.pc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.pc-name {
+  font-size: 1.08rem;
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pc-progress { margin-bottom: 14px; }
+.pc-progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+.pc-progress-info span:first-child { color: var(--text-secondary); }
+.pc-progress-info span:last-child { color: var(--accent); font-weight: 700; }
+
+.pc-bar {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pc-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #f0c860);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.pc-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.pc-meta i { margin-right: 4px; }
+
+.pc-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.3;
+  display: block;
+}
+.empty-state p {
+  font-size: 0.92rem;
+  max-width: 300px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ==========================================
+   EDITOR PAGE
+   ========================================== */
+#editorPage {
+  height: 100vh;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.editor-title {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-header-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.editor-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ==========================================
+   SIDEBAR (File List)
+   ========================================== */
+.editor-sidebar {
+  width: 250px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-title {
+  padding: 14px 16px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+/* File select bar (checkbox select all files) */
+.file-select-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.file-select-bar label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.file-select-bar input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+.file-select-info {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+/* Individual file item */
+.file-item {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.file-item:hover { background: var(--bg-card-solid); }
+.file-item.active { background: var(--accent-glow); }
+.file-item.active .file-name { color: var(--accent); font-weight: 600; }
+
+.file-item input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.file-body { flex: 1; min-width: 0; }
+
+.file-name {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mini progress bar per file */
+.file-mini-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.file-mini-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.file-count {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* ==========================================
+   EDITOR TOOLBAR
+   ========================================== */
+.editor-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.range-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.range-group input {
+  width: 58px;
+  padding: 5px 8px;
+  text-align: center;
+  font-size: 0.78rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+.range-group input:focus { border-color: var(--accent); }
+
+.selected-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.toolbar-spacer { flex: 1; }
+
+/* ==========================================
+   ENTRIES TABLE
+   ========================================== */
+.table-wrap {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.trans-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.trans-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg-secondary);
+}
+
+.trans-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.trans-table td {
+  padding: 0;
+  border-bottom: 1px solid rgba(45, 45, 110, 0.2);
+  vertical-align: top;
+}
+
+.trans-table tbody tr { transition: background var(--transition-speed); }
+.trans-table tbody tr:hover td { background: rgba(14, 14, 52, 0.5); }
+
+.col-check { width: 38px; padding: 8px 10px !important; text-align: center; }
+.col-num { width: 48px; padding: 8px 10px !important; color: var(--text-muted); font-size: 0.78rem; text-align: right; font-variant-numeric: tabular-nums; }
+.col-original { padding: 8px 12px !important; max-width: 400px; word-break: break-word; line-height: 1.6; color: var(--text-secondary); }
+.col-translated { padding: 0 !important; max-width: 400px; }
+
+.col-translated input {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  transition: background var(--transition-speed);
+}
+.col-translated input:focus {
+  background: var(--bg-input);
+  outline: none;
+}
+.col-translated input.status-translated { color: var(--color-success); }
+.col-translated input.status-edited { color: var(--accent); }
+
+.col-status { width: 32px; padding: 8px 6px !important; text-align: center; font-size: 0.65rem; }
+.col-status .fa-check { color: var(--color-success); }
+.col-status .fa-pen { color: var(--accent); font-size: 0.6rem; }
+
+/* ==========================================
+   PAGINATION
+   ========================================== */
+.table-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.table-pager .btn-icon { width: 30px; height: 30px; font-size: 0.7rem; }
+.table-pager .btn-icon:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+
+/* ==========================================
+   SIDE PANELS
+   ========================================== */
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  display: none;
+}
+.panel-backdrop.visible { display: block; }
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: -480px;
+  width: 460px;
+  max-width: 95vw;
+  height: 100vh;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  z-index: 100;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.side-panel.open { right: 0; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.panel-header h3 { flex: 1; font-size: 1.02rem; font-weight: 700; }
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* ==========================================
+   MODALS
+   ========================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.visible { display: flex; }
+
+.modal-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  animation: modalEnter 0.2s ease;
+}
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.modal-header h3 { flex: 1; font-size: 1.05rem; font-weight: 700; }
+
+.modal-content {
+  padding: 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+/* ==========================================
+   TRANSLATE PROGRESS MODAL
+   ========================================== */
+.tm-file-info {
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tm-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.tm-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.tm-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #f0c860);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.tm-stats {
+  display: flex;
+  gap: 24px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.tm-stats b { color: var(--text-primary); font-weight: 600; }
+
+.tm-log {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  height: 200px;
+  overflow-y: auto;
+  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.tm-log .log-success { color: var(--color-success); }
+.tm-log .log-error { color: var(--color-error); }
+.tm-log .log-info { color: var(--color-info); }
+
+/* ==========================================
+   GLOSSARY
+   ========================================== */
+.glossary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.glossary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  transition: border-color var(--transition-speed);
+}
+.glossary-item:hover { border-color: var(--border-hover); }
+
+.glossary-source { flex: 1; color: var(--text-secondary); word-break: break-word; }
+.glossary-arrow { color: var(--text-muted); font-size: 0.65rem; flex-shrink: 0; }
+.glossary-target { flex: 1; color: var(--accent); font-weight: 600; word-break: break-word; }
+.glossary-item .btn-icon { width: 28px; height: 28px; font-size: 0.65rem; flex-shrink: 0; }
+
+/* ==========================================
+   SEARCH RESULTS
+   ========================================== */
+.search-results {
+  margin-top: 14px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  padding: 10px 12px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+}
+.search-result-item:hover { border-color: var(--accent); }
+
+.sr-original {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sr-translated { color: var(--accent); word-break: break-word; }
+.sr-file { font-size: 0.68rem; color: var(--text-muted); margin-top: 4px; }
+.search-result-item mark {
+  background: rgba(232, 152, 48, 0.3);
+  color: var(--text-primary);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* ==========================================
+   TOAST NOTIFICATIONS
+   ========================================== */
+#toastContainer {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 11px 24px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 500;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: toastIn 0.25s ease, toastOut 0.25s ease 2.5s forwards;
+}
+.toast-success { background: var(--color-success); color: #000; }
+.toast-error { background: var(--color-error); color: #fff; }
+.toast-warning { background: var(--accent); color: #000; }
+.toast-info { background: var(--color-info); color: #fff; }
+
+@keyframes toastIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+  .home-header, .home-actions, .home-body { padding-left: 16px; padding-right: 16px; }
+  .project-grid { grid-template-columns: 1fr; }
+  .editor-sidebar { width: 190px; }
+  .editor-toolbar { padding: 8px 12px; gap: 6px; }
+  .col-original, .col-translated { max-width: 200px; }
+}
+
+@media (max-width: 540px) {
+  .editor-sidebar { display: none; }
+  .side-panel { width: 100%; max-width: 100vw; }
+  .home-brand h1 { font-size: 1.4rem; }
+}
+</head>
+<body>
+
+<!-- ==========================================
+     HOME PAGE
+     ========================================== -->
+<div id="homePage">
+  <div class="home-header">
+    <div class="home-brand">
+      <h1>RPGTrans</h1>
+      <p>Game Translation Tool v1.0</p>
+    </div>
+  </div>
+
+  <div class="home-actions">
+    <button class="btn btn-primary" onclick="openCreateModal()">
+      <i class="fas fa-plus"></i> Buat Project
+    </button>
+    <button class="btn btn-secondary" onclick="openRestoreModal()">
+      <i class="fas fa-rotate-left"></i> Pulihkan Project
+    </button>
+  </div>
+
+  <div class="home-body">
+    <div class="home-stats">Project Tersimpan: <b id="projectCount">0</b></div>
+    <div class="search-wrap">
+      <i class="fas fa-search"></i>
+      <input class="form-input" id="searchProjectInput" placeholder="Cari project..." oninput="renderHomeProjects()">
+    </div>
+    <div class="project-grid" id="projectGrid"></div>
+  </div>
+</div>
+
+<!-- ==========================================
+     EDITOR PAGE
+     ========================================== -->
+<div id="editorPage">
+  <div class="editor-header">
+    <button class="btn-icon" onclick="navigateHome()" title="Kembali">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="editor-title" id="editorTitle"></div>
+    <div class="editor-header-actions">
+      <button class="btn-icon" onclick="openSidePanel('settingsPanel')" title="Pengaturan AI">
+        <i class="fas fa-cog"></i>
+      </button>
+      <button class="btn-icon" onclick="openSidePanel('glossaryPanel')" title="Glossary">
+        <i class="fas fa-book"></i>
+      </button>
+      <button class="btn-icon" onclick="openSidePanel('searchPanel')" title="Cari & Ganti">
+        <i class="fas fa-search"></i>
+      </button>
+      <button class="btn-icon" onclick="exportTranslated()" title="Export Hasil">
+        <i class="fas fa-download"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-body">
+    <!-- Sidebar: Daftar File -->
+    <div class="editor-sidebar">
+      <div class="sidebar-title">
+        <i class="fas fa-folder-open"></i> &nbsp;Files
+      </div>
+      <div class="file-select-bar">
+        <label>
+          <input type="checkbox" id="checkAllFilesCheckbox" onchange="toggleAllFilesCheckbox(this.checked)">
+          Pilih File
+        </label>
+        <span class="file-select-info" id="fileSelectInfo"></span>
+      </div>
+      <div class="file-list" id="fileListContainer"></div>
+    </div>
+
+    <!-- Main: Toolbar + Table + Pager -->
+    <div class="editor-main">
+      <div class="editor-toolbar">
+        <div class="range-group">
+          <span>Range:</span>
+          <input type="number" id="rangeFromInput" min="1" placeholder="dari">
+          <span style="color:var(--text-muted)">—</span>
+          <input type="number" id="rangeToInput" min="1" placeholder="sampai">
+          <button class="btn btn-small btn-secondary" onclick="selectByRange()">Pilih</button>
+        </div>
+        <button class="btn btn-small btn-secondary" onclick="selectAllEntries()">
+          <i class="fas fa-check-double"></i> Semua
+        </button>
+        <button class="btn btn-small btn-secondary" onclick="deselectAllEntries()">
+          <i class="fas fa-times"></i> Batal
+        </button>
+        <span class="selected-info" id="selectedInfoText"></span>
+        <div class="toolbar-spacer"></div>
+        <button class="btn btn-small btn-primary" onclick="startTranslation()">
+          <i class="fas fa-language"></i> Translate
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="trans-table">
+          <thead>
+            <tr>
+              <th class="col-check">
+                <input type="checkbox" id="checkAllEntriesCheckbox" onchange="toggleAllEntriesCheckbox(this.checked)">
+              </th>
+              <th class="col-num">#</th>
+              <th>Teks Asli</th>
+              <th>Hasil Terjemahan</th>
+              <th class="col-status"></th>
+            </tr>
+          </thead>
+          <tbody id="entriesTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="table-pager" id="tablePager"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel Backdrop -->
+<div class="panel-backdrop" id="panelBackdrop" onclick="closeAllPanels()"></div>
+<!-- ==========================================
+     SETTINGS PANEL
+     ========================================== -->
+<div class="side-panel" id="settingsPanel">
+  <div class="panel-header">
+    <i class="fas fa-cog" style="color:var(--accent)"></i>
+    <h3>Pengaturan AI</h3>
+    <button class="btn-icon" onclick="closeAllPanels()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="form-group">
+      <label class="form-label">API Key (Gemini)</label>
+      <input class="form-input" id="settingApiKey" type="password" placeholder="AIza...">
+      <div class="form-hint">Dapatkan gratis di aistudio.google.com — klik "Get API Key"</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Model AI</label>
+      <select class="form-input" id="settingModel">
+        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Terbaru)</option>
+        <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Cepat & Hemat)</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Paling Akurat)</option>
+      </select>
+      <div class="form-hint">Flash = cepat & murah. Pro = akurat tapi lambat & boros quota.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Batch Size (baris per request)</label>
+      <input class="form-input" id="settingBatchSize" type="number" min="5" max="100" value="50">
+      <div class="form-hint">50 baris/request = 160 request untuk 8000 baris (~8 menit). Naikkan untuk hemat, turunkan jika error.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Delay antar Request (detik)</label>
+      <input class="form-input" id="settingDelay" type="number" min="0" max="30" value="3">
+      <div class="form-hint">3 detik aman untuk free tier. Otomatis naik jika kena rate limit (429).</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sumber Bahasa</label>
+      <select class="form-input" id="settingLang">
+        <option value="ja">Jepang → Indonesia</option>
+        <option value="en">Inggris → Indonesia</option>
+      </select>
+    </div>
+    <div class="divider"></div>
+    <div class="form-group">
+      <label class="form-label">Prompt Kustom</label>
+      <textarea class="form-input" id="settingPrompt" rows="12" placeholder="Kosongkan = gunakan prompt default RPGTrans"></textarea>
+      <div class="form-hint">Default sudah dioptimalkan untuk RPG & VN. Edit jika perlu penyesuaian.</div>
+    </div>
+    <button class="btn btn-secondary" onclick="resetPromptToDefault()" style="width:100%;margin-bottom:8px">
+      <i class="fas fa-undo"></i> Reset ke Prompt Default
+    </button>
+    <div class="divider"></div>
+    <button class="btn btn-primary" onclick="saveSettings()" style="width:100%">
+      <i class="fas fa-save"></i> Simpan Pengaturan
+    </button>
+  </div>
+</div>
+
+<!-- ==========================================
+     GLOSSARY PANEL
+     ========================================== -->
+<div class="side-panel" id="glossaryPanel">
+  <div class="panel-header">
+    <i class="fas fa-book" style="color:var(--accent)"></i>
+    <h3>Glossary</h3>
+    <button class="btn-icon" onclick="closeAllPanels()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="form-group">
+      <label class="form-label">Teks Asli</label>
+      <input class="form-input" id="glossarySourceInput" placeholder="日本語 / English">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Terjemahan</label>
+      <input class="form-input" id="glossaryTargetInput" placeholder="Bahasa Indonesia">
+    </div>
+    <button class="btn btn-primary" onclick="addGlossaryEntry()" style="width:100%;margin-bottom:4px">
+      <i class="fas fa-plus"></i> Tambah
+    </button>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:.82rem;color:var(--text-secondary)">Daftar (<span id="glossaryCountText">0</span>)</span>
+      <button class="btn btn-small btn-secondary" onclick="clearAllGlossary()">
+        <i class="fas fa-trash"></i> Hapus Semua
+      </button>
+    </div>
+    <div class="glossary-list" id="glossaryListContainer"></div>
+  </div>
+</div>
+
+<!-- ==========================================
+     SEARCH & REPLACE PANEL
+     ========================================== -->
+<div class="side-panel" id="searchPanel">
+  <div class="panel-header">
+    <i class="fas fa-search" style="color:var(--accent)"></i>
+    <h3>Cari & Ganti</h3>
+    <button class="btn-icon" onclick="closeAllPanels()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="form-group">
+      <label class="form-label">Cari di Hasil Terjemahan</label>
+      <input class="form-input" id="searchQueryInput" placeholder="Kata atau kalimat..." oninput="executeSearch()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ganti Dengan</label>
+      <input class="form-input" id="replaceQueryInput" placeholder="Teks pengganti...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Scope</label>
+      <select class="form-input" id="searchScopeSelect">
+        <option value="file">File Ini Saja</option>
+        <option value="all">Semua File</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-primary" onclick="replaceSingleMatch()" style="flex:1">
+        <i class="fas fa-exchange-alt"></i> Ganti Satu
+      </button>
+      <button class="btn btn-primary" onclick="replaceAllMatches()" style="flex:1">
+        <i class="fas fa-exchange-alt"></i> Ganti Semua
+      </button>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:10px">
+      Ditemukan: <b id="searchResultCountText">0</b>
+    </div>
+    <div class="search-results" id="searchResultsContainer"></div>
+  </div>
+</div>
+<!-- ==========================================
+     CREATE PROJECT MODAL
+     ========================================== -->
+<div class="modal-backdrop" id="createModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-plus" style="color:var(--accent)"></i> Buat Project Baru</h3>
+      <button class="btn-icon" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-content">
+      <div class="form-group">
+        <label class="form-label">Nama Project</label>
+        <input class="form-input" id="createProjectName" placeholder="Contoh: Game RPG Chapter 1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sumber Bahasa</label>
+        <select class="form-input" id="createProjectLang">
+          <option value="ja">Jepang → Indonesia</option>
+          <option value="en">Inggris → Indonesia</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Upload File JSON (bisa pilih banyak)</label>
+        <input class="form-input" id="createProjectFiles" type="file" accept=".json" multiple style="padding:8px">
+        <div class="form-hint">Pilih beberapa file sekaligus dengan Ctrl+Click. Format: array of strings, array of objects, atau object dengan nested arrays.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('createModal')">Batal</button>
+      <button class="btn btn-primary" onclick="createNewProject()"><i class="fas fa-check"></i> Buat</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     RESTORE PROJECT MODAL
+     ========================================== -->
+<div class="modal-backdrop" id="restoreModal">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <h3><i class="fas fa-rotate-left" style="color:var(--accent)"></i> Pulihkan Project</h3>
+      <button class="btn-icon" onclick="closeModal('restoreModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-content">
+      <div class="form-group">
+        <label class="form-label">Upload File Backup (.json)</label>
+        <input class="form-input" id="restoreFileInput" type="file" accept=".json" style="padding:8px">
+        <div class="form-hint">File yang dihasilkan dari tombol Backup di halaman utama.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('restoreModal')">Batal</button>
+      <button class="btn btn-primary" onclick="restoreFromBackup()"><i class="fas fa-check"></i> Pulihkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     EDIT NAME MODAL
+     ========================================== -->
+<div class="modal-backdrop" id="editNameModal">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Ubah Nama Project</h3>
+      <button class="btn-icon" onclick="closeModal('editNameModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-content">
+      <input class="form-input" id="editNameInput">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('editNameModal')">Batal</button>
+      <button class="btn btn-primary" onclick="confirmEditName()"><i class="fas fa-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     DELETE CONFIRM MODAL
+     ========================================== -->
+<div class="modal-backdrop" id="deleteModal">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <h3 style="color:var(--color-error)"><i class="fas fa-exclamation-triangle"></i> Hapus Project</h3>
+      <button class="btn-icon" onclick="closeModal('deleteModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-content">
+      <p style="color:var(--text-secondary);font-size:.9rem">
+        Yakin ingin menghapus "<b id="deleteTargetName" style="color:var(--text-primary)"></b>"? Tindakan ini tidak bisa dibatalkan.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+      <button class="btn btn-danger" onclick="confirmDeleteProject()"><i class="fas fa-trash"></i> Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     TRANSLATE PROGRESS MODAL
+     ========================================== -->
+<div class="modal-backdrop" id="translateModal">
+  <div class="modal-box" style="max-width:580px">
+    <div class="modal-header">
+      <h3><i class="fas fa-language" style="color:var(--accent)"></i> Memproses Terjemahan</h3>
+      <button class="btn-icon" onclick="cancelTranslation()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-content">
+      <div class="tm-file-info">
+        <i class="fas fa-file-code"></i>
+        <span id="translateFileName">—</span>
+      </div>
+      <div class="tm-progress-text">
+        <span>Progress</span>
+        <span id="translatePercent">0%</span>
+      </div>
+      <div class="tm-bar">
+        <div class="tm-bar-fill" id="translateBarFill" style="width:0%"></div>
+      </div>
+      <div class="tm-stats">
+        <div>Diproses: <b id="translateDone">0</b> / <b id="translateTotal">0</b></div>
+        <div>Batch: <b id="translateBatch">0</b></div>
+        <div>Delay: <b id="translateDelay">3</b>s</div>
+        <div>File: <b id="translateFileNum">0</b> / <b id="translateFileTotal">0</b></div>
+      </div>
+      <div class="tm-log" id="translateLog"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="cancelTranslation()">
+        <i class="fas fa-stop"></i> Batalkan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+<script>
+/* ============================================================
+   SECTION 1: DEFAULT PROMPTS (RPG & VN Optimized)
+   ============================================================ */
+var DEFAULT_PROMPTS = {
+  ja: 'Kamu adalah penerjemah profesional bahasa Jepang ke Bahasa Indonesia, spesialisasi game RPG dan Visual Novel.\n\n' +
+    '[ATURAN UMUM]\n' +
+    '- Terjemahkan setiap baris secara akurat, natural, dan sesuai konteks\n' +
+    '- Pertahankan format nomor baris: "angka. teks"\n' +
+    '- JANGAN menambah atau mengurangi jumlah baris\n' +
+    '- JANGAN menambahkan penjelasan, catatan, atau komentar\n\n' +
+    '[ATURAN RPG & VISUAL NOVEL]\n' +
+    '- Dialog: bahasa sehari-hari natural, sesuai karakter\n' +
+    '- Narasi: bahasa deskriptif dan mengalir\n' +
+    '- Pilihan (choices): singkat, jelas, konsisten\n' +
+    '- Nama karakter: TETAP ASLI, jangan diterjemahkan\n' +
+    '- Honorifiks (さん、ちゃん、くん、さま、先輩、先生): pertahankan atau adaptasi natural\n' +
+    '- Istilah game WAJIB tetap asli: HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Accessory, Save, Load, Quest, Dungeon, Boss, Enemy, Battle, Menu, Config, Status, Equipment, Shop, Inn, Guild\n' +
+    '- Onomatope (ああ、うう、っ、ふん): sesuaikan konteks atau pertahankan jika sulit\n' +
+    '- Ekspresi khas (やだ、もう、ええっと): adaptasi natural ke bahasa Indonesia\n\n' +
+    '[FORMAT YANG HARUS DIPERTAHANKAN]\n' +
+    '- \\\\n, \\\\r, \\\\t (baris baru, tab)\n' +
+    '- \\\\C[x] (kode warna), \\\\V[x] (variabel), \\\\N[x] (nama karakter), \\\\P[x] (posisi)\n' +
+    '- {nama}, <nama>, %s, %d (placeholder)\n' +
+    '- Angka, simbol, tanda baca khusus, kurung [ ] { } ( )\n\n' +
+    '[CONTOH]\n' +
+    '1. こんにちは、冒険者さん。 → Halo, petualang.\n' +
+    '2. HPが回復した！ → HP pulih!\n' +
+    '3. \\\\C[2]\\\\N[1]さん、冒険に出ませんか？ → \\\\C[2]\\\\N[1], mau pergi berpetualangan?\n' +
+    '4. うう……助けて…… → Uuh... tolong...\n' +
+    '5. はい / いいえ → Ya / Tidak\n\n' +
+    'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...',
+
+  en: 'Kamu adalah penerjemah profesional bahasa Inggris ke Bahasa Indonesia, spesialisasi game RPG dan Visual Novel.\n\n' +
+    '[ATURAN UMUM]\n' +
+    '- Terjemahkan setiap baris secara akurat, natural, dan sesuai konteks\n' +
+    '- Pertahankan format nomor baris: "angka. teks"\n' +
+    '- JANGAN menambah atau mengurangi jumlah baris\n' +
+    '- JANGAN menambahkan penjelasan, catatan, atau komentar\n\n' +
+    '[ATURAN RPG & VISUAL NOVEL]\n' +
+    '- Dialog: bahasa sehari-hari natural, sesuai karakter\n' +
+    '- Narasi: bahasa deskriptif dan mengalir\n' +
+    '- Pilihan (choices): singkat, jelas, konsisten\n' +
+    '- Nama karakter: TETAP ASLI, jangan diterjemahkan\n' +
+    '- Istilah game WAJIB tetap asli: HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Accessory, Save, Load, Quest, Dungeon, Boss, Enemy, Battle, Menu, Config, Status, Equipment, Shop, Inn, Guild\n' +
+    '- Idiom dan ekspresi: adaptasi ke Indonesia yang sesuai, BUKAN terjemahan literal\n' +
+    '- Kata ganti: sesuaikan konteks (I/you/we tergantung karakter)\n\n' +
+    '[FORMAT YANG HARUS DIPERTAHANKAN]\n' +
+    '- \\\\n, \\\\r, \\\\t (baris baru, tab)\n' +
+    '- \\\\C[x] (kode warna), \\\\V[x] (variabel), \\\\N[x] (nama karakter), \\\\P[x] (posisi)\n' +
+    '- {nama}, <nama>, %s, %d (placeholder)\n' +
+    '- Angka, simbol, tanda baca khusus, kurung [ ] { } ( )\n\n' +
+    '[CONTOH]\n' +
+    '1. Hello, adventurer! → Halo, petualang!\n' +
+    '2. HP has been restored! → HP telah pulih!\n' +
+    '3. \\\\C[2]\\\\N[1], want to adventure? → \\\\C[2]\\\\N[1], mau pergi berpetualangan?\n' +
+    '4. I... I can\'t... → Aku... aku tidak bisa...\n' +
+    '5. Yes / No → Ya / Tidak\n\n' +
+    'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...'
+};
+
+
+/* ============================================================
+   SECTION 2: APPLICATION STATE
+   ============================================================ */
+var APP = {
+  // Semua project yang tersimpan
+  projects: [],
+
+  // Project & file yang sedang aktif di editor
+  currentProjectId: null,
+  currentFileIndex: 0,
+
+  // Pagination di tabel entri
+  currentPage: 0,
+  pageSize: 100,
+
+  // Set entri yang dicentang (untuk translate/edit)
+  selectedEntryIds: new Set(),
+
+  // Set index file yang dicentang (untuk multi-file translate)
+  selectedFileIndices: new Set(),
+
+  // Status translasi
+  isTranslating: false,
+  translationCancelled: false,
+
+  // Hasil pencarian
+  searchResults: [],
+  searchResultIndex: -1,
+
+  // Target operasi sementara (delete, edit)
+  deleteTargetId: null,
+  editTargetId: null,
+
+  // Pengaturan AI (global, disimpan terpisah)
+  settings: {
+    apiKey: '',
+    model: 'gemini-1.5-flash',
+    batchSize: 50,
+    delay: 3,
+    sourceLang: 'ja',
+    customPrompt: ''
+  }
+};
+
+
+/* ============================================================
+   SECTION 3: LOCAL STORAGE
+   ============================================================ */
+var STORAGE_PROJECTS_KEY = 'rpgtrans_projects';
+var STORAGE_SETTINGS_KEY = 'rpgtrans_settings';
+
+function saveProjects() {
+  try {
+    localStorage.setItem(STORAGE_PROJECTS_KEY, JSON.stringify(APP.projects));
+  } catch (error) {
+    if (error.name === 'QuotaExceededError') {
+      showToast('Storage penuh! Backup & hapus project lama.', 'error');
+    } else {
+      showToast('Gagal menyimpan: ' + error.message, 'error');
+    }
+  }
+}
+
+function loadProjects() {
+  try {
+    var data = localStorage.getItem(STORAGE_PROJECTS_KEY);
+    if (data) APP.projects = JSON.parse(data);
+  } catch (e) {
+    APP.projects = [];
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(APP.settings));
+}
+
+function loadSettings() {
+  try {
+    var data = localStorage.getItem(STORAGE_SETTINGS_KEY);
+    if (data) Object.assign(APP.settings, JSON.parse(data));
+  } catch (e) { /* gunakan default */ }
+}
+
+
+/* ============================================================
+   SECTION 4: UTILITY FUNCTIONS
+   ============================================================ */
+function getElement(id) { return document.getElementById(id); }
+
+function escapeHtml(text) {
+  if (!text) return '';
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function escapeAttribute(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function sleep(milliseconds) {
+  return new Promise(function(resolve) { setTimeout(resolve, milliseconds); });
+}
+
+function readFileAsText(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(event) { resolve(event.target.result); };
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
+function downloadFile(filename, content) {
+  var blob = new Blob([content], { type: 'application/json' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function formatDateTime(timestamp) {
+  var d = new Date(timestamp);
+  var date = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  var time = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return date + ' \u00B7 ' + time;
+}
+
+function generateId() {
+  return 'p' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+}
+
+
+/* ============================================================
+   SECTION 5: UI HELPERS (Toast, Modal, Panel)
+   ============================================================ */
+function showToast(message, type) {
+  type = type || 'info';
+  var typeMap = { success: 'toast-success', error: 'toast-error', warning: 'toast-warning', info: 'toast-info' };
+  var el = document.createElement('div');
+  el.className = 'toast ' + (typeMap[type] || 'toast-info');
+  el.textContent = message;
+  getElement('toastContainer').appendChild(el);
+  setTimeout(function() { el.remove(); }, 2800);
+}
+
+function openModal(modalId) {
+  getElement(modalId).classList.add('visible');
+}
+
+function closeModal(modalId) {
+  getElement(modalId).classList.remove('visible');
+}
+
+function openSidePanel(panelId) {
+  closeAllPanels();
+  setTimeout(function() {
+    getElement(panelId).classList.add('open');
+    getElement('panelBackdrop').classList.add('visible');
+    // Populate panel content saat dibuka
+    if (panelId === 'settingsPanel') populateSettingsPanel();
+    if (panelId === 'glossaryPanel') renderGlossaryList();
+  }, 10);
+}
+
+function closeAllPanels() {
+  document.querySelectorAll('.side-panel').forEach(function(panel) {
+    panel.classList.remove('open');
+  });
+  getElement('panelBackdrop').classList.remove('visible');
+}
+
+
+/* ============================================================
+   SECTION 6: NAVIGATION
+   ============================================================ */
+function navigateHome() {
+  if (APP.isTranslating) {
+    showToast('Selesaikan translasi terlebih dahulu', 'warning');
+    return;
+  }
+  getElement('editorPage').style.display = 'none';
+  getElement('homePage').style.display = 'flex';
+  APP.currentProjectId = null;
+  APP.selectedEntryIds.clear();
+  APP.selectedFileIndices.clear();
+  renderHomeProjects();
+}
+
+function openProjectEditor(projectId) {
+  APP.currentProjectId = projectId;
+  APP.currentFileIndex = 0;
+  APP.currentPage = 0;
+  APP.selectedEntryIds.clear();
+  APP.selectedFileIndices.clear();
+  getElement('homePage').style.display = 'none';
+  getElement('editorPage').style.display = 'flex';
+  renderEditor();
+}
+
+/* Getter helpers */
+function getCurrentProject() {
+  return APP.projects.find(function(p) { return p.id === APP.currentProjectId; });
+}
+
+function getCurrentFile() {
+  var project = getCurrentProject();
+  return project ? project.files[APP.currentFileIndex] : null;
+}
+/* ============================================================
+   SECTION 7: HOME PAGE RENDERING
+   ============================================================ */
+function renderHomeProjects() {
+  var query = getElement('searchProjectInput').value.toLowerCase();
+  var filtered = APP.projects.filter(function(p) {
+    return p.name.toLowerCase().indexOf(query) !== -1;
+  });
+
+  getElement('projectCount').textContent = APP.projects.length;
+  var grid = getElement('projectGrid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>' +
+      (APP.projects.length === 0
+        ? 'Belum ada project. Klik "Buat Project" untuk memulai.'
+        : 'Tidak ditemukan project yang cocok.') +
+      '</p></div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(function(project) {
+    var totalEntries = 0;
+    var translatedEntries = 0;
+    project.files.forEach(function(file) {
+      totalEntries += file.entries.length;
+      file.entries.forEach(function(entry) {
+        if (entry.translated) translatedEntries++;
+      });
+    });
+    var percentage = totalEntries > 0 ? Math.round(translatedEntries / totalEntries * 100) : 0;
+    var langLabel = project.sourceLang === 'ja' ? 'JP\u2192ID' : 'EN\u2192ID';
+
+    return '<div class="project-card">' +
+      '<div class="pc-header">' +
+        '<span class="pc-name">' + escapeHtml(project.name) + '</span>' +
+        '<span class="lang-tag">' + langLabel + '</span>' +
+      '</div>' +
+      '<div class="pc-progress">' +
+        '<div class="pc-progress-info">' +
+          '<span>' + translatedEntries + ' / ' + totalEntries + ' baris</span>' +
+          '<span>' + percentage + '%</span>' +
+        '</div>' +
+        '<div class="pc-bar"><div class="pc-bar-fill" style="width:' + percentage + '%"></div></div>' +
+      '</div>' +
+      '<div class="pc-meta">' +
+        '<span><i class="fas fa-clock"></i> ' + formatDateTime(project.updatedAt) + '</span>' +
+        '<span><i class="fas fa-file-code"></i> ' + project.files.length + ' file</span>' +
+      '</div>' +
+      '<div class="pc-actions">' +
+        '<button class="btn btn-small btn-primary" onclick="openProjectEditor(\'' + project.id + '\')"><i class="fas fa-folder-open"></i> Buka</button>' +
+        '<button class="btn btn-small btn-secondary" onclick="promptEditName(\'' + project.id + '\')"><i class="fas fa-pen"></i></button>' +
+        '<button class="btn btn-small btn-secondary" onclick="backupProject(\'' + project.id + '\')"><i class="fas fa-download"></i></button>' +
+        '<button class="btn btn-small btn-secondary" style="color:var(--color-error)" onclick="promptDeleteProject(\'' + project.id + '\')"><i class="fas fa-trash"></i></button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+
+/* ============================================================
+   SECTION 8: PROJECT CRUD OPERATIONS
+   ============================================================ */
+function openCreateModal() {
+  getElement('createProjectName').value = '';
+  getElement('createProjectFiles').value = '';
+  openModal('createModal');
+}
+
+function openRestoreModal() {
+  getElement('restoreFileInput').value = '';
+  openModal('restoreModal');
+}
+
+/* Buat project baru - Mendukung MULTIPLE FILES */
+async function createNewProject() {
+  var name = getElement('createProjectName').value.trim();
+  if (!name) { showToast('Nama project wajib diisi', 'warning'); return; }
+
+  var lang = getElement('createProjectLang').value;
+  var fileInputs = getElement('createProjectFiles').files;
+
+  if (!fileInputs || fileInputs.length === 0) {
+    showToast('Pilih minimal satu file JSON', 'warning');
+    return;
+  }
+
+  var projectFiles = [];
+  var errorMessages = [];
+
+  for (var i = 0; i < fileInputs.length; i++) {
+    try {
+      var text = await readFileAsText(fileInputs[i]);
+      var json = JSON.parse(text);
+      var detected = detectJsonStructure(json);
+
+      if (detected) {
+        // Jika detect mengembalikan 1 file, pakai nama file upload
+        // Jika lebih dari 1 (nested object), beri prefix nama file upload
+        if (detected.files.length === 1) {
+          detected.files[0].name = fileInputs[i].name;
+        } else {
+          var baseName = fileInputs[i].name.replace(/\.json$/i, '');
+          detected.files.forEach(function(f) {
+            f.name = baseName + '_' + f.name;
+          });
+        }
+        projectFiles = projectFiles.concat(detected.files);
+      } else {
+        errorMessages.push(fileInputs[i].name);
+      }
+    } catch (err) {
+      errorMessages.push(fileInputs[i].name + ' (' + err.message + ')');
+    }
+  }
+
+  if (projectFiles.length === 0) {
+    showToast('Tidak ada file yang berhasil diparse' + (errorMessages.length ? ': ' + errorMessages.join(', ') : ''), 'error');
+    return;
+  }
+
+  if (errorMessages.length > 0) {
+    showToast('Beberapa file gagal: ' + errorMessages.join(', '), 'warning');
+  }
+
+  var totalLines = projectFiles.reduce(function(sum, f) { return sum + f.entries.length; }, 0);
+
+  var project = {
+    id: generateId(),
+    name: name,
+    sourceLang: lang,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    glossary: [],
+    files: projectFiles,
+    settings: {}
+  };
+
+  APP.projects.unshift(project);
+  saveProjects();
+  closeModal('createModal');
+  renderHomeProjects();
+  showToast('Project "' + name + '" dibuat (' + projectFiles.length + ' file, ' + totalLines + ' baris)', 'success');
+}
+
+function promptEditName(projectId) {
+  var project = APP.projects.find(function(p) { return p.id === projectId; });
+  if (!project) return;
+  APP.editTargetId = projectId;
+  getElement('editNameInput').value = project.name;
+  openModal('editNameModal');
+}
+
+function confirmEditName() {
+  var name = getElement('editNameInput').value.trim();
+  if (!name) { showToast('Nama tidak boleh kosong', 'warning'); return; }
+  var project = APP.projects.find(function(p) { return p.id === APP.editTargetId; });
+  if (project) {
+    project.name = name;
+    project.updatedAt = Date.now();
+    saveProjects();
+    renderHomeProjects();
+  }
+  closeModal('editNameModal');
+  showToast('Nama berhasil diubah', 'success');
+}
+
+function promptDeleteProject(projectId) {
+  var project = APP.projects.find(function(p) { return p.id === projectId; });
+  if (!project) return;
+  APP.deleteTargetId = projectId;
+  getElement('deleteTargetName').textContent = project.name;
+  openModal('deleteModal');
+}
+
+function confirmDeleteProject() {
+  APP.projects = APP.projects.filter(function(p) { return p.id !== APP.deleteTargetId; });
+  saveProjects();
+  closeModal('deleteModal');
+  renderHomeProjects();
+  showToast('Project dihapus', 'success');
+}
+
+function backupProject(projectId) {
+  var project = APP.projects.find(function(p) { return p.id === projectId; });
+  if (!project) return;
+  var backupData = JSON.stringify({
+    version: '1.0',
+    tool: 'RPGTrans',
+    exportedAt: Date.now(),
+    project: project
+  }, null, 2);
+  var safeName = project.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+  downloadFile(safeName + '_backup.json', backupData);
+  showToast('Backup diunduh', 'success');
+}
+
+function restoreFromBackup() {
+  var fileInput = getElement('restoreFileInput').files[0];
+  if (!fileInput) { showToast('Pilih file backup', 'warning'); return; }
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      var json = JSON.parse(event.target.result);
+      if (json.tool !== 'RPGTrans' || !json.project) {
+        showToast('Bukan file backup RPGTrans yang valid', 'error');
+        return;
+      }
+      var project = json.project;
+      project.id = generateId(); // ID baru agar tidak bentrok
+      APP.projects.unshift(project);
+      saveProjects();
+      closeModal('restoreModal');
+      renderHomeProjects();
+      showToast('Project "' + project.name + '" dipulihkan', 'success');
+    } catch (err) {
+      showToast('Gagal membaca file: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(fileInput);
+}
+
+function exportTranslated() {
+  var project = getCurrentProject();
+  if (!project) return;
+  var output = {};
+  project.files.forEach(function(file) {
+    output[file.name] = file.entries.map(function(entry) {
+      return { original: entry.original, translated: entry.translated };
+    });
+  });
+  var safeName = project.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+  downloadFile(safeName + '_translated.json', JSON.stringify(output, null, 2));
+  showToast('Hasil terjemahan diunduh', 'success');
+}
+
+
+/* ============================================================
+   SECTION 9: JSON STRUCTURE DETECTION
+   ============================================================ */
+function detectJsonStructure(json) {
+  // Case 1: Array of strings
+  if (Array.isArray(json) && json.length > 0 && typeof json[0] === 'string') {
+    return { files: [createFileObject('data.json', json.map(function(t, i) { return createEntry(i, t); }))] };
+  }
+
+  // Case 2: Array of objects
+  if (Array.isArray(json) && json.length > 0 && typeof json[0] === 'object' && json[0] !== null) {
+    var textKey = findFirstStringKey(json[0]);
+    if (textKey) {
+      return { files: [createFileObject('data.json', json.map(function(obj, i) { return createEntry(i, obj[textKey] || ''); }))] };
+    }
+    // Fallback: cari string di nested structure
+    var nestedStrings = extractAllStrings(json);
+    if (nestedStrings.length > 0) {
+      return { files: [createFileObject('data.json', nestedStrings.map(function(t, i) { return createEntry(i, t); }))] };
+    }
+  }
+
+  // Case 3: Object dengan nested arrays (misal { "file1": [...], "file2": [...] })
+  if (typeof json === 'object' && json !== null && !Array.isArray(json)) {
+    var files = [];
+    for (var key in json) {
+      if (!json.hasOwnProperty(key)) continue;
+      var value = json[key];
+      if (!Array.isArray(value) || value.length === 0) continue;
+
+      if (typeof value[0] === 'string') {
+        files.push(createFileObject(key + '.json', value.map(function(t, i) { return createEntry(i, t); })));
+      } else if (typeof value[0] === 'object' && value[0] !== null) {
+        var strKey = findFirstStringKey(value[0]);
+        if (strKey) {
+          files.push(createFileObject(key + '.json', value.map(function(obj, i) { return createEntry(i, obj[strKey] || ''); })));
+        }
+      }
+    }
+    if (files.length > 0) return { files: files };
+  }
+
+  return null; // Tidak dikenali
+}
+
+function findFirstStringKey(obj) {
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    if (typeof obj[keys[i]] === 'string' && obj[keys[i]].trim().length > 0) return keys[i];
+  }
+  return null;
+}
+
+function extractAllStrings(arr) {
+  var result = [];
+  for (var i = 0; i < arr.length; i++) {
+    var item = arr[i];
+    if (typeof item === 'string' && item.trim()) {
+      result.push(item);
+    } else if (Array.isArray(item)) {
+      result = result.concat(extractAllStrings(item));
+    } else if (item && typeof item === 'object') {
+      var values = Object.values(item);
+      for (var j = 0; j < values.length; j++) {
+        if (typeof values[j] === 'string' && values[j].trim()) result.push(values[j]);
+        else if (Array.isArray(values[j])) result = result.concat(extractAllStrings(values[j]));
+      }
+    }
+  }
+  return result;
+}
+
+function createFileObject(name, entries) { return { name: name, entries: entries }; }
+function createEntry(index, text) { return { id: 'e' + index, original: text, translated: '', status: 'pending' }; }
+/* ============================================================
+   SECTION 10: EDITOR RENDERING
+   ============================================================ */
+function renderEditor() {
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var langLabel = project.sourceLang === 'ja' ? 'JP\u2192ID' : 'EN\u2192ID';
+  getElement('editorTitle').innerHTML = escapeHtml(project.name) + ' <span class="lang-tag">' + langLabel + '</span>';
+
+  renderFileList();
+  renderEntriesTable();
+}
+
+/* Render daftar file di sidebar dengan checkbox + mini progress */
+function renderFileList() {
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var container = getElement('fileListContainer');
+  container.innerHTML = project.files.map(function(file, index) {
+    var done = file.entries.filter(function(e) { return e.translated; }).length;
+    var total = file.entries.length;
+    var pct = total > 0 ? Math.round(done / total * 100) : 0;
+    var isActive = index === APP.currentFileIndex ? ' active' : '';
+    var isChecked = APP.selectedFileIndices.has(index) ? 'checked' : '';
+
+    return '<div class="file-item' + isActive + '" onclick="switchToFile(' + index + ')">' +
+      '<input type="checkbox" ' + isChecked + ' onclick="event.stopPropagation(); toggleFileSelection(' + index + ', this.checked)">' +
+      '<div class="file-body">' +
+        '<span class="file-name">' + escapeHtml(file.name) + '</span>' +
+        '<div class="file-mini-bar"><div class="file-mini-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      '<span class="file-count">' + done + '/' + total + '</span>' +
+    '</div>';
+  }).join('');
+
+  updateFileSelectInfo();
+}
+
+function switchToFile(index) {
+  APP.currentFileIndex = index;
+  APP.currentPage = 0;
+  APP.selectedEntryIds.clear();
+  renderEditor();
+}
+
+/* Render tabel entri di file saat ini */
+function renderEntriesTable() {
+  var file = getCurrentFile();
+  if (!file) return;
+
+  var startIdx = APP.currentPage * APP.pageSize;
+  var endIdx = Math.min(startIdx + APP.pageSize, file.entries.length);
+  var pageEntries = file.entries.slice(startIdx, endIdx);
+
+  var tbody = getElement('entriesTableBody');
+  tbody.innerHTML = pageEntries.map(function(entry, i) {
+    var rowNum = startIdx + i + 1;
+    var isChecked = APP.selectedEntryIds.has(entry.id) ? 'checked' : '';
+    var statusIcon = '';
+    var inputClass = '';
+
+    if (entry.status === 'edited') {
+      statusIcon = '<i class="fas fa-pen"></i>';
+      inputClass = ' status-edited';
+    } else if (entry.translated) {
+      statusIcon = '<i class="fas fa-check"></i>';
+      inputClass = ' status-translated';
+    }
+
+    return '<tr>' +
+      '<td class="col-check"><input type="checkbox" ' + isChecked + ' onchange="toggleEntrySelection(\'' + entry.id + '\', this.checked)"></td>' +
+      '<td class="col-num">' + rowNum + '</td>' +
+      '<td class="col-original">' + escapeHtml(entry.original) + '</td>' +
+      '<td class="col-translated"><input class="' + inputClass + '" value="' + escapeAttribute(entry.translated) + '" onfocus="this.select()" onchange="onTranslationEdited(\'' + entry.id + '\', this.value)"></td>' +
+      '<td class="col-status">' + statusIcon + '</td>' +
+    '</tr>';
+  }).join('');
+
+  // Update max value input range
+  getElement('rangeFromInput').max = file.entries.length;
+  getElement('rangeToInput').max = file.entries.length;
+
+  renderTablePager();
+  updateSelectionInfo();
+}
+
+function renderTablePager() {
+  var file = getCurrentFile();
+  if (!file) return;
+  var totalPages = Math.ceil(file.entries.length / APP.pageSize);
+  var pager = getElement('tablePager');
+
+  if (totalPages <= 1) {
+    pager.innerHTML = '<span style="color:var(--text-muted)">' + file.entries.length + ' baris</span>';
+    return;
+  }
+
+  var prevDisabled = APP.currentPage === 0 ? ' disabled' : '';
+  var nextDisabled = APP.currentPage >= totalPages - 1 ? ' disabled' : '';
+
+  pager.innerHTML =
+    '<button class="btn-icon" onclick="goToPage(' + (APP.currentPage - 1) + ')"' + prevDisabled + '><i class="fas fa-chevron-left"></i></button>' +
+    '<span>Hal ' + (APP.currentPage + 1) + ' / ' + totalPages + ' (' + file.entries.length + ' baris)</span>' +
+    '<button class="btn-icon" onclick="goToPage(' + (APP.currentPage + 1) + ')"' + nextDisabled + '><i class="fas fa-chevron-right"></i></button>';
+}
+
+function goToPage(page) {
+  var file = getCurrentFile();
+  if (!file) return;
+  var maxPage = Math.ceil(file.entries.length / APP.pageSize) - 1;
+  APP.currentPage = Math.max(0, Math.min(page, maxPage));
+  renderEntriesTable();
+  document.querySelector('.table-wrap').scrollTop = 0;
+}
+
+
+/* ============================================================
+   SECTION 11: FILE SELECTION (Multi-File Translate)
+   ============================================================ */
+function toggleFileSelection(fileIndex, isChecked) {
+  if (isChecked) APP.selectedFileIndices.add(fileIndex);
+  else APP.selectedFileIndices.delete(fileIndex);
+  updateFileSelectInfo();
+  renderFileList();
+}
+
+function toggleAllFilesCheckbox(isChecked) {
+  var project = getCurrentProject();
+  if (!project) return;
+  if (isChecked) {
+    project.files.forEach(function(f, i) { APP.selectedFileIndices.add(i); });
+  } else {
+    APP.selectedFileIndices.clear();
+  }
+  renderFileList();
+}
+
+function updateFileSelectInfo() {
+  var info = getElement('fileSelectInfo');
+  var count = APP.selectedFileIndices.size;
+  info.textContent = count > 0 ? count + ' dipilih' : '';
+}
+
+
+/* ============================================================
+   SECTION 12: ENTRY SELECTION
+   ============================================================ */
+function toggleEntrySelection(entryId, isChecked) {
+  if (isChecked) APP.selectedEntryIds.add(entryId);
+  else APP.selectedEntryIds.delete(entryId);
+  updateSelectionInfo();
+}
+
+function toggleAllEntriesCheckbox(isChecked) {
+  var file = getCurrentFile();
+  if (!file) return;
+  var startIdx = APP.currentPage * APP.pageSize;
+  var endIdx = Math.min(startIdx + APP.pageSize, file.entries.length);
+  for (var i = startIdx; i < endIdx; i++) {
+    if (isChecked) APP.selectedEntryIds.add(file.entries[i].id);
+    else APP.selectedEntryIds.delete(file.entries[i].id);
+  }
+  renderEntriesTable();
+}
+
+function selectAllEntries() {
+  var file = getCurrentFile();
+  if (!file) return;
+  file.entries.forEach(function(e) { APP.selectedEntryIds.add(e.id); });
+  renderEntriesTable();
+}
+
+function deselectAllEntries() {
+  APP.selectedEntryIds.clear();
+  renderEntriesTable();
+}
+
+function selectByRange() {
+  var file = getCurrentFile();
+  if (!file) return;
+  var from = parseInt(getElement('rangeFromInput').value) - 1;
+  var to = parseInt(getElement('rangeToInput').value) - 1;
+  if (isNaN(from) || isNaN(to) || from < 0 || to < 0 || from >= file.entries.length || to >= file.entries.length) {
+    showToast('Range tidak valid', 'warning');
+    return;
+  }
+  var lo = Math.min(from, to);
+  var hi = Math.max(from, to);
+  for (var i = lo; i <= hi; i++) {
+    APP.selectedEntryIds.add(file.entries[i].id);
+  }
+  renderEntriesTable();
+  showToast((hi - lo + 1) + ' baris dipilih', 'success');
+}
+
+function updateSelectionInfo() {
+  var info = getElement('selectedInfoText');
+  info.textContent = APP.selectedEntryIds.size > 0 ? APP.selectedEntryIds.size + ' dipilih' : '';
+
+  // Sync header checkbox
+  var file = getCurrentFile();
+  if (file) {
+    var startIdx = APP.currentPage * APP.pageSize;
+    var endIdx = Math.min(startIdx + APP.pageSize, file.entries.length);
+    var pageIds = file.entries.slice(startIdx, endIdx).map(function(e) { return e.id; });
+    var allChecked = pageIds.length > 0 && pageIds.every(function(id) { return APP.selectedEntryIds.has(id); });
+    getElement('checkAllEntriesCheckbox').checked = allChecked;
+  }
+}
+
+
+/* ============================================================
+   SECTION 13: MANUAL TRANSLATION EDITING
+   ============================================================ */
+function onTranslationEdited(entryId, newValue) {
+  var file = getCurrentFile();
+  if (!file) return;
+  var entry = file.entries.find(function(e) { return e.id === entryId; });
+  if (entry) {
+    entry.translated = newValue;
+    entry.status = newValue ? 'edited' : 'pending';
+    var project = getCurrentProject();
+    if (project) project.updatedAt = Date.now();
+    saveProjects();
+    renderFileList(); // Update mini progress bar di sidebar
+  }
+}
+/* ============================================================
+   SECTION 14: TRANSLATION ENGINE (Multi-File Support)
+   ============================================================ */
+async function startTranslation() {
+  if (APP.isTranslating) { showToast('Translasi sedang berjalan', 'warning'); return; }
+  if (!APP.settings.apiKey) {
+    showToast('API Key belum diisi! Buka Pengaturan AI.', 'warning');
+    openSidePanel('settingsPanel');
+    return;
+  }
+
+  var project = getCurrentProject();
+  if (!project) return;
+
+  // Tentukan file mana yang akan diproses
+  var filesToProcess = [];
+  if (APP.selectedFileIndices.size > 0) {
+    // File yang dicentang di sidebar
+    APP.selectedFileIndices.forEach(function(idx) {
+      if (project.files[idx]) filesToProcess.push({ file: project.files[idx], index: idx });
+    });
+  } else {
+    // Jika tidak ada file dicentang, pakai file saat ini saja
+    filesToProcess.push({ file: project.files[APP.currentFileIndex], index: APP.currentFileIndex });
+  }
+
+  // Kumpulkan semua entri yang perlu diterjemahkan
+  var allEntries = [];
+  filesToProcess.forEach(function(fp) {
+    var entries = fp.file.entries.filter(function(e) {
+      return APP.selectedEntryIds.size > 0
+        ? APP.selectedEntryIds.has(e.id)   // Yang dicentang di tabel
+        : !e.translated;                    // Atau semua yang belum diterjemahkan
+    });
+    if (entries.length > 0) {
+      allEntries.push({ file: fp.file, fileIndex: fp.index, entries: entries });
+    }
+  });
+
+  if (allEntries.length === 0 || allEntries.every(function(f) { return f.entries.length === 0; })) {
+    showToast('Tidak ada baris yang perlu diterjemahkan. Pilih baris atau centang file.', 'warning');
+    return;
+  }
+
+  // Hitung total entri
+  var totalEntries = 0;
+  allEntries.forEach(function(f) { totalEntries += f.entries.length; });
+
+  var batchSize = Math.max(5, Math.min(100, APP.settings.batchSize || 50));
+  var currentDelay = Math.max(0, APP.settings.delay || 3);
+  var lang = project.sourceLang || 'ja';
+  var prompt = APP.settings.customPrompt || DEFAULT_PROMPTS[lang] || DEFAULT_PROMPTS.ja;
+  var model = APP.settings.model || 'gemini-1.5-flash';
+  var glossary = project.glossary || [];
+
+  APP.isTranslating = true;
+  APP.translationCancelled = false;
+
+  // Setup modal
+  getElement('translateTotal').textContent = totalEntries;
+  getElement('translateDone').textContent = '0';
+  getElement('translateBatch').textContent = '0';
+  getElement('translateDelay').textContent = currentDelay;
+  getElement('translatePercent').textContent = '0%';
+  getElement('translateBarFill').style.width = '0%';
+  getElement('translateFileTotal').textContent = allEntries.length;
+  getElement('translateFileNum').textContent = '0';
+  getElement('translateLog').innerHTML = '';
+  openModal('translateModal');
+
+  addTranslateLog('Model: ' + model, 'info');
+  addTranslateLog('Batch size: ' + batchSize, 'info');
+  addTranslateLog('Delay: ' + currentDelay + ' detik', 'info');
+  addTranslateLog('Total: ' + totalEntries + ' baris di ' + allEntries.length + ' file', 'info');
+  addTranslateLog('---', 'info');
+
+  var processedCount = 0;
+  var batchNumber = 0;
+
+  // Loop per file
+  for (var fi = 0; fi < allEntries.length; fi++) {
+    if (APP.translationCancelled) break;
+
+    var fileData = allEntries[fi];
+    getElement('translateFileNum').textContent = (fi + 1);
+    getElement('translateFileName').textContent = fileData.file.name;
+    addTranslateLog('\u25B6 File ' + (fi + 1) + '/' + allEntries.length + ': ' + fileData.file.name + ' (' + fileData.entries.length + ' baris)', 'info');
+
+    // Loop per batch dalam file ini
+    for (var i = 0; i < fileData.entries.length; i += batchSize) {
+      if (APP.translationCancelled) break;
+
+      var batch = fileData.entries.slice(i, i + batchSize);
+      batchNumber++;
+      getElement('translateBatch').textContent = batchNumber;
+      addTranslateLog('Batch ' + batchNumber + ': ' + batch.length + ' baris...', 'info');
+
+      // Bangun teks
+      var textBlock = batch.map(function(entry, idx) {
+        return (idx + 1) + '. ' + entry.original;
+      }).join('\n');
+
+      // Bangun glossary section
+      var glossarySection = '';
+      if (glossary.length > 0) {
+        glossarySection = '\n[GLOSSARY]\n' +
+          glossary.map(function(g) { return g.source + ' \u2192 ' + g.target; }).join('\n') +
+          '\nWAJIB gunakan glossary di atas sebagai referensi utama.\n';
+      }
+
+      var fullPrompt = prompt + glossarySection + '\n[TEKS]\n' + textBlock;
+
+      try {
+        var resultText = await callGeminiAPI(fullPrompt, model, APP.settings.apiKey);
+
+        // Parse hasil
+        var resultLines = resultText.split('\n').filter(function(line) {
+          return /^\d+[\.\)]\s*/.test(line.trim());
+        });
+
+        batch.forEach(function(entry, idx) {
+          if (resultLines[idx]) {
+            var translated = resultLines[idx].replace(/^\d+[\.\)]\s*/, '').trim();
+            var targetEntry = fileData.file.entries.find(function(e) { return e.id === entry.id; });
+            if (targetEntry) {
+              targetEntry.translated = translated;
+              targetEntry.status = 'translated';
+            }
+          } else {
+            addTranslateLog('Baris ' + (i + idx + 1) + ': tidak ada hasil', 'error');
+          }
+        });
+
+        processedCount += batch.length;
+        var percent = Math.round(processedCount / totalEntries * 100);
+        getElement('translateDone').textContent = processedCount;
+        getElement('translatePercent').textContent = percent + '%';
+        getElement('translateBarFill').style.width = percent + '%';
+        addTranslateLog('Batch ' + batchNumber + ' selesai (' + processedCount + '/' + totalEntries + ')', 'success');
+
+        // Simpan progress setiap batch
+        project.updatedAt = Date.now();
+        saveProjects();
+        renderEntriesTable();
+        renderFileList();
+
+      } catch (error) {
+        addTranslateLog('Error batch ' + batchNumber + ': ' + error.message, 'error');
+
+        // Handle rate limit — adaptive delay
+        if (error.message.indexOf('429') !== -1 || error.message.indexOf('RATE_LIMIT') !== -1 || error.message.indexOf('quota') !== -1) {
+          currentDelay = Math.min(30, currentDelay + 3);
+          getElement('translateDelay').textContent = currentDelay;
+          addTranslateLog('Rate limited! Delay dinaikkan ke ' + currentDelay + 's. Menunggu...', 'error');
+          await sleep(currentDelay * 1000);
+          i -= batchSize; // Ulangi batch ini
+          continue;
+        }
+
+        // Handle invalid API key
+        if (error.message.indexOf('API key') !== -1 || error.message.indexOf('invalid') !== -1) {
+          addTranslateLog('API Key tidak valid! Dihentikan.', 'error');
+          break;
+        }
+
+        // Error lain: skip batch ini
+        addTranslateLog('Skip batch, lanjut...', 'info');
+      }
+
+      // Delay antar request
+      if (i + batchSize < fileData.entries.length && !APP.translationCancelled && currentDelay > 0) {
+        await sleep(currentDelay * 1000);
+      }
+    }
+
+    addTranslateLog('\u2713 Selesai: ' + fileData.file.name, 'success');
+  }
+
+  // Cleanup
+  APP.isTranslating = false;
+  APP.selectedEntryIds.clear();
+  APP.selectedFileIndices.clear();
+  renderEntriesTable();
+  renderFileList();
+
+  if (APP.translationCancelled) {
+    addTranslateLog('Translasi dibatalkan.', 'error');
+    setTimeout(function() { closeModal('translateModal'); }, 1500);
+    showToast('Translasi dibatalkan', 'warning');
+  } else {
+    addTranslateLog('Semua selesai!', 'success');
+    setTimeout(function() { closeModal('translateModal'); }, 1000);
+    showToast('Translasi selesai!', 'success');
+  }
+}
+
+async function callGeminiAPI(promptText, model, apiKey) {
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + apiKey;
+  var response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
+    })
+  });
+
+  if (!response.ok) {
+    var errorData = await response.json().catch(function() { return {}; });
+    var errorMsg = (errorData.error && errorData.error.message) || ('HTTP ' + response.status);
+    throw new Error(errorMsg);
+  }
+
+  var data = await response.json();
+  var text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if (!text) throw new Error('Respons tidak valid dari API');
+  return text;
+}
+
+function cancelTranslation() {
+  APP.translationCancelled = true;
+}
+
+function addTranslateLog(message, type) {
+  var logEl = getElement('translateLog');
+  var div = document.createElement('div');
+  var classMap = { success: 'log-success', error: 'log-error', info: 'log-info' };
+  div.className = classMap[type] || 'log-info';
+  div.textContent = '[' + new Date().toLocaleTimeString('id-ID') + '] ' + message;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+
+/* ============================================================
+   SECTION 15: GLOSSARY MANAGEMENT
+   ============================================================ */
+function renderGlossaryList() {
+  var project = getCurrentProject();
+  if (!project) return;
+  getElement('glossaryCountText').textContent = project.glossary.length;
+
+  var container = getElement('glossaryListContainer');
+  if (project.glossary.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:.85rem">Belum ada entri glossary</div>';
+    return;
+  }
+
+  container.innerHTML = project.glossary.map(function(item, index) {
+    return '<div class="glossary-item">' +
+      '<span class="glossary-source">' + escapeHtml(item.source) + '</span>' +
+      '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
+      '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
+      '<button class="btn-icon" onclick="removeGlossaryEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
+    '</div>';
+  }).join('');
+}
+
+function addGlossaryEntry() {
+  var source = getElement('glossarySourceInput').value.trim();
+  var target = getElement('glossaryTargetInput').value.trim();
+  if (!source || !target) { showToast('Isi kedua field', 'warning'); return; }
+
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var duplicate = project.glossary.some(function(g) { return g.source === source; });
+  if (duplicate) { showToast('"' + source + '" sudah ada di glossary', 'warning'); return; }
+
+  project.glossary.push({ source: source, target: target });
+  project.updatedAt = Date.now();
+  saveProjects();
+
+  getElement('glossarySourceInput').value = '';
+  getElement('glossaryTargetInput').value = '';
+  renderGlossaryList();
+  showToast('Glossary ditambahkan', 'success');
+}
+
+function removeGlossaryEntry(index) {
+  var project = getCurrentProject();
+  if (!project) return;
+  project.glossary.splice(index, 1);
+  project.updatedAt = Date.now();
+  saveProjects();
+  renderGlossaryList();
+}
+
+function clearAllGlossary() {
+  var project = getCurrentProject();
+  if (!project || project.glossary.length === 0) return;
+  project.glossary = [];
+  project.updatedAt = Date.now();
+  saveProjects();
+  renderGlossaryList();
+  showToast('Glossary dihapus semua', 'success');
+}
+
+
+/* ============================================================
+   SECTION 16: SEARCH & REPLACE
+   ============================================================ */
+function executeSearch() {
+  var query = getElement('searchQueryInput').value.trim().toLowerCase();
+  var scope = getElement('searchScopeSelect').value;
+  var results = [];
+
+  if (!query) {
+    APP.searchResults = [];
+    APP.searchResultIndex = -1;
+    getElement('searchResultCountText').textContent = '0';
+    getElement('searchResultsContainer').innerHTML = '';
+    return;
+  }
+
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var filesToSearch = scope === 'all' ? project.files : [project.files[APP.currentFileIndex]];
+  var currentFileName = getCurrentFile() ? getCurrentFile().name : '';
+
+  filesToSearch.forEach(function(file, fileIndex) {
+    file.entries.forEach(function(entry, entryIndex) {
+      if (entry.translated && entry.translated.toLowerCase().indexOf(query) !== -1) {
+        results.push({
+          fileIndex: fileIndex,
+          fileName: file.name,
+          entryId: entry.id,
+          entryIndex: entryIndex,
+          original: entry.original,
+          translated: entry.translated
+        });
+      }
+    });
+  });
+
+  APP.searchResults = results;
+  APP.searchResultIndex = -1;
+  getElement('searchResultCountText').textContent = results.length;
+
+  var container = getElement('searchResultsContainer');
+  if (results.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:.85rem">Tidak ditemukan</div>';
+    return;
+  }
+
+  container.innerHTML = results.map(function(r, index) {
+    var highlighted = escapeHtml(r.translated).replace(new RegExp('(' + escapeRegex(query) + ')', 'gi'), '<mark>$1</mark>');
+    var fileLabel = r.fileName !== currentFileName ? '<div class="sr-file"><i class="fas fa-file-code"></i> ' + escapeHtml(r.fileName) + '</div>' : '';
+    return '<div class="search-result-item" onclick="jumpToSearchResult(' + index + ')">' +
+      '<div class="sr-original">' + escapeHtml(r.original).substring(0, 80) + (r.original.length > 80 ? '...' : '') + '</div>' +
+      '<div class="sr-translated">' + highlighted + '</div>' +
+      fileLabel +
+    '</div>';
+  }).join('');
+}
+
+function jumpToSearchResult(index) {
+  APP.searchResultIndex = index;
+  var result = APP.searchResults[index];
+  if (!result) return;
+
+  if (result.fileIndex !== APP.currentFileIndex) {
+    APP.currentFileIndex = result.fileIndex;
+    renderFileList();
+  }
+
+  APP.currentPage = Math.floor(result.entryIndex / APP.pageSize);
+  renderEntriesTable();
+
+  setTimeout(function() {
+    document.querySelectorAll('#entriesTableBody .col-translated input').forEach(function(inp) {
+      var numCell = inp.closest('tr').querySelector('.col-num');
+      if (numCell && numCell.textContent == result.entryIndex + 1) {
+        inp.style.background = 'rgba(232, 152, 48, 0.15)';
+        inp.focus();
+        inp.select();
+        setTimeout(function() { inp.style.background = ''; }, 2500);
+      }
+    });
+  }, 60);
+}
+
+function replaceSingleMatch() {
+  if (APP.searchResults.length === 0) { showToast('Lakukan pencarian dulu', 'warning'); return; }
+  var query = getElement('searchQueryInput').value.trim();
+  var replacement = getElement('replaceQueryInput').value;
+  if (!query) return;
+
+  var idx = APP.searchResultIndex >= 0 ? APP.searchResultIndex : 0;
+  if (idx >= APP.searchResults.length) idx = 0;
+  var result = APP.searchResults[idx];
+  if (!result) return;
+
+  var project = getCurrentProject();
+  var entry = project.files[result.fileIndex].entries[result.entryIndex];
+  var newTrans = entry.translated.replace(new RegExp(escapeRegex(query), 'i'), replacement);
+  if (newTrans !== entry.translated) {
+    entry.translated = newTrans;
+    entry.status = 'edited';
+    project.updatedAt = Date.now();
+    saveProjects();
+  }
+
+  APP.searchResultIndex = idx + 1;
+  executeSearch();
+  renderEntriesTable();
+  showToast('1 penggantian dilakukan', 'success');
+}
+
+function replaceAllMatches() {
+  if (APP.searchResults.length === 0) { showToast('Lakukan pencarian dulu', 'warning'); return; }
+  var query = getElement('searchQueryInput').value.trim();
+  var replacement = getElement('replaceQueryInput').value;
+  if (!query) return;
+
+  var project = getCurrentProject();
+  var regex = new RegExp(escapeRegex(query), 'gi');
+  var count = 0;
+
+  APP.searchResults.forEach(function(result) {
+    var entry = project.files[result.fileIndex].entries[result.entryIndex];
+    var newTrans = entry.translated.replace(regex, replacement);
+    if (newTrans !== entry.translated) {
+      entry.translated = newTrans;
+      entry.status = 'edited';
+      count++;
+    }
+  });
+
+  project.updatedAt = Date.now();
+  saveProjects();
+  executeSearch();
+  renderEntriesTable();
+  showToast(count + ' penggantian dilakukan', 'success');
+}
+
+
+/* ============================================================
+   SECTION 17: SETTINGS MANAGEMENT
+   ============================================================ */
+function populateSettingsPanel() {
+  getElement('settingApiKey').value = APP.settings.apiKey || '';
+  getElement('settingModel').value = APP.settings.model || 'gemini-1.5-flash';
+  getElement('settingBatchSize').value = APP.settings.batchSize || 50;
+  getElement('settingDelay').value = APP.settings.delay || 3;
+  getElement('settingLang').value = APP.settings.sourceLang || 'ja';
+  getElement('settingPrompt').value = APP.settings.customPrompt || '';
+}
+
+function saveSettings() {
+  APP.settings.apiKey = getElement('settingApiKey').value.trim();
+  APP.settings.model = getElement('settingModel').value;
+  APP.settings.batchSize = parseInt(getElement('settingBatchSize').value) || 50;
+  APP.settings.delay = parseInt(getElement('settingDelay').value) || 3;
+  APP.settings.sourceLang = getElement('settingLang').value;
+  APP.settings.customPrompt = getElement('settingPrompt').value.trim();
+  localStorage.setItem(STORAGE_SETTINGS_KEY, JSON.stringify(APP.settings));
+  showToast('Pengaturan disimpan', 'success');
+}
+
+function resetPromptToDefault() {
+  getElement('settingPrompt').value = '';
+  showToast('Prompt direset ke default', 'success');
+}
+
+
+/* ============================================================
+   SECTION 18: KEYBOARD SHORTCUTS
+   ============================================================ */
+document.addEventListener('keydown', function(event) {
+  // Ctrl+S: manual save
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault();
+    saveProjects();
+    showToast('Tersimpan', 'success');
+  }
+  // Escape: tutup panel/modal
+  if (event.key === 'Escape') {
+    closeAllPanels();
+    document.querySelectorAll('.modal-backdrop.visible').forEach(function(modal) {
+      if (modal.id !== 'translateModal') modal.classList.remove('visible');
+    });
+  }
+});
+
+
+/* ============================================================
+   SECTION 19: INITIALIZATION
+   ============================================================ */
+(function init() {
+  loadSettings();
+  loadProjects();
+  renderHomeProjects();
+})();
+</script>
+</body>
+</html>
