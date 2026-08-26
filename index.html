@@ -930,6 +930,39 @@ select.form-input { cursor: pointer; }
   .side-panel { width: 100%; max-width: 100vw; }
   .home-brand h1 { font-size: 1.4rem; }
 }
+/* Mobile Sidebar Toggle */
+.sidebar-toggle {
+  display: none;
+}
+
+@media (max-width: 540px) {
+  .sidebar-toggle { display: flex; }
+  .editor-sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100vh;
+    z-index: 80;
+    transition: left 0.25s ease;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+  }
+  .editor-sidebar.mobile-open {
+    left: 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  }
+  .sidebar-backdrop-mobile {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 79;
+  }
+  .sidebar-backdrop-mobile.show {
+    display: block;
+  }
+   }
 </style>
 </head>
 <body>
@@ -974,24 +1007,27 @@ select.form-input { cursor: pointer; }
     </button>
     <div class="editor-title" id="editorTitle"></div>
     <div class="editor-header-actions">
-      <button class="btn-icon" onclick="openSidePanel('settingsPanel')" title="Pengaturan AI">
-        <i class="fas fa-cog"></i>
-      </button>
-      <button class="btn-icon" onclick="openSidePanel('glossaryPanel')" title="Glossary">
-        <i class="fas fa-book"></i>
-      </button>
-      <button class="btn-icon" onclick="openSidePanel('searchPanel')" title="Cari & Ganti">
-        <i class="fas fa-search"></i>
-      </button>
-      <button class="btn-icon" onclick="exportTranslated()" title="Export Hasil">
-        <i class="fas fa-download"></i>
-      </button>
-    </div>
-  </div>
+  <button class="btn-icon sidebar-toggle" onclick="toggleMobileSidebar()" title="Files">
+    <i class="fas fa-folder-open"></i>
+  </button>
+  <button class="btn-icon" onclick="openSidePanel('settingsPanel')" title="Pengaturan AI">
+    <i class="fas fa-cog"></i>
+  </button>
+  <button class="btn-icon" onclick="openSidePanel('glossaryPanel')" title="Glossary">
+    <i class="fas fa-book"></i>
+  </button>
+  <button class="btn-icon" onclick="openSidePanel('searchPanel')" title="Cari & Ganti">
+    <i class="fas fa-search"></i>
+  </button>
+  <button class="btn-icon" onclick="exportTranslated()" title="Export Hasil">
+    <i class="fas fa-download"></i>
+  </button>
+</div>
 
   <div class="editor-body">
     <!-- Sidebar: Daftar File -->
     <div class="editor-sidebar">
+     <div class="sidebar-backdrop-mobile" id="sidebarBackdropMobile" onclick="closeMobileSidebar()"></div>
       <div class="sidebar-title">
         <i class="fas fa-folder-open"></i> &nbsp;Files
       </div>
@@ -1561,7 +1597,19 @@ function closeAllPanels() {
   });
   getElement('panelBackdrop').classList.remove('visible');
 }
+function toggleMobileSidebar() {
+  var sidebar = document.querySelector('.editor-sidebar');
+  var backdrop = getElement('sidebarBackdropMobile');
+  sidebar.classList.toggle('mobile-open');
+  backdrop.classList.toggle('show');
+}
 
+function closeMobileSidebar() {
+  var sidebar = document.querySelector('.editor-sidebar');
+  var backdrop = getElement('sidebarBackdropMobile');
+  sidebar.classList.remove('mobile-open');
+  backdrop.classList.remove('show');
+   }
 
 /* ============================================================
    SECTION 6: NAVIGATION
