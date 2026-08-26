@@ -2083,13 +2083,9 @@ function renderTablePager() {
   var nextDisabled = cur >= totalPages - 1 ? ' disabled' : '';
 
   pager.innerHTML =
-    '<button class="btn-icon" onclick="goToPage(' + (cur - 1) + ')"' + prevDisabled + ' title="Sebelumnya"><i class="fas fa-chevron-left"></i></button>' +
-    '<span>Hal <b>' + (cur + 1) + '</b> / ' + totalPages + '</span>' +
-    '<input type="number" min="1" max="' + totalPages + '" value="' + (cur + 1) + '" ' +
-      'style="width:50px;padding:4px 6px;text-align:center;font-size:.78rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary)" ' +
-      'onkeydown="if(event.key===\'Enter\'){goToPage(parseInt(this.value)-1)}" ' +
-      'onblur="this.value=' + (cur + 1) + '">' +
-    '<button class="btn-icon" onclick="goToPage(' + (cur + 1) + ')"' + nextDisabled + ' title="Berikutnya"><i class="fas fa-chevron-right"></i></button>';
+    '<button class="btn-icon" onclick="goToPage(' + (cur - 1) + ')"' + prevDisabled + '><i class="fas fa-chevron-left"></i></button>' +
+    '<span>Hal ' + (cur + 1) + ' / ' + totalPages + '</span>' +
+    '<button class="btn-icon" onclick="goToPage(' + (cur + 1) + ')"' + nextDisabled + '><i class="fas fa-chevron-right"></i></button>';
 }
 
 function goToPage(page) {
