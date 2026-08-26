@@ -936,7 +936,7 @@ select.form-input { cursor: pointer; }
     top: 0;
     left: -260px;
     width: 250px;
-    height: 100vh;
+    height: 100px;
     z-index: 80;
     transition: left 0.25s ease;
     background: var(--bg-secondary);
@@ -955,60 +955,15 @@ select.form-input { cursor: pointer; }
   }
   .sidebar-backdrop-mobile.show { display: block; }
 
-  /* Teks vertikal di HP */
-  .trans-table,
-  .trans-table thead,
-  .trans-table tbody,
-  .trans-table tr,
-  .trans-table th,
-  .trans-table td {
+  /* Teks vertikal di HP - PAKAI TABLE BLOK */
+  .table-wrap { overflow-x: hidden; }
+  
+  .trans-table {
     display: block;
     width: 100%;
+    border: none;
   }
   .trans-table thead { display: none; }
-  .trans-table tr {
-    margin-bottom: 12px;
-    padding: 12px;
-    background: var(--bg-card-solid);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-  }
-  .col-check {
-    width: auto !important;
-    padding: 0 10px 8px 0 !important;
-    display: inline-block;
-    vertical-align: middle;
-  }
-  .col-num {
-    padding: 0 8px 8px 0 !important;
-    display: inline-block;
-    vertical-align: middle;
-    font-size: .75rem !important;
-    color: var(--text-muted);
-  }
-  .col-status { display: none; }
-  .col-original {
-    padding: 0 12px 8px 12px !important;
-    max-width: none !important;
-    margin-bottom: 8px;
-    border-bottom: 1px dashed rgba(45, 45, 110, 0.3);
-    color: var(--text-secondary);
-    font-size: .82rem;
-    line-height: 1.6;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-  .col-translated {
-    padding: 0 12px 12px 12px !important;
-    max-width: none !important;
-  }
-  .col-translated input {
-    width: 100%;
-    padding: 8px 12px !important;
-    font-size: .82rem;
-    line-height: 1.6;
-    word-break: break-word;
-    overflow-wrap: break-word;
   }
 </style>
 </head>
