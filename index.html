@@ -1058,6 +1058,9 @@ select.form-input { cursor: pointer; }
           <i class="fas fa-times"></i> Batal
         </button>
         <span class="selected-info" id="selectedInfoText"></span>
+        <span style="color:var(--text-muted);font-size:.78rem;margin:0 4px" id="pagerInfo"></span>
+        <button class="btn-icon" id="pagerPrev" onclick="goToPage(APP.currentPage-1)" disabled><i class="fas fa-chevron-left"></i></button>
+        <button class="btn-icon" id="pagerNext" onclick="goToPage(APP.currentPage+1)" disabled><i class="fas fa-chevron-right"></i></button>
         <div class="toolbar-spacer"></div>
         <button class="btn btn-small btn-primary" onclick="startTranslation()">
           <i class="fas fa-language"></i> Translate
@@ -2071,21 +2074,22 @@ function renderTablePager() {
   var file = getCurrentFile();
   if (!file) return;
   var totalPages = Math.ceil(file.entries.length / APP.pageSize);
-  var pager = getElement('tablePager');
+
+  // Update toolbar pager
+  var info = getElement('pagerInfo');
+  var prev = getElement('pagerPrev');
+  var next = getElement('pagerNext');
 
   if (totalPages <= 1) {
-    pager.innerHTML = '<span style="color:var(--text-muted)">' + file.entries.length + ' baris</span>';
+    info.textContent = file.entries.length + ' baris';
+    prev.disabled = true;
+    next.disabled = true;
     return;
   }
 
-  var cur = APP.currentPage;
-  var prevDisabled = cur === 0 ? ' disabled' : '';
-  var nextDisabled = cur >= totalPages - 1 ? ' disabled' : '';
-
-  pager.innerHTML =
-    '<button class="btn-icon" onclick="goToPage(' + (cur - 1) + ')"' + prevDisabled + '><i class="fas fa-chevron-left"></i></button>' +
-    '<span>Hal ' + (cur + 1) + ' / ' + totalPages + '</span>' +
-    '<button class="btn-icon" onclick="goToPage(' + (cur + 1) + ')"' + nextDisabled + '><i class="fas fa-chevron-right"></i></button>';
+  info.textContent = (APP.currentPage + 1) + '/' + totalPages;
+  prev.disabled = APP.currentPage === 0;
+  next.disabled = APP.currentPage >= totalPages - 1;
 }
 
 function goToPage(page) {
