@@ -420,6 +420,9 @@ select.form-input { cursor: pointer; }
 }
 
 .sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Menggantikan fungsi &nbsp; biar rapi */
   padding: 14px 16px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -428,6 +431,12 @@ select.form-input { cursor: pointer; }
   letter-spacing: 1.2px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  background: var(--bg-secondary); /* Paksa warnanya sama dengan sidebar, hilangkan blok aneh */
+}
+
+.sidebar-title i {
+  font-size: 0.8rem; /* Perbesar sedikit biar proporsional sama tulisan */
+  color: var(--text-secondary);
 }
 
 /* File select bar (checkbox select all files) */
