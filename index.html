@@ -1855,11 +1855,15 @@ async function createNewProject() {
 
   var projectFiles = [];
   var errorMessages = [];
-
-  for (var i = 0; i < fileInputs.length; i++) {
+  var allExtractedNames = {};
+   
+for (var i = 0; i < fileInputs.length; i++) {
     try {
       var text = await readFileAsText(fileInputs[i]);
       var json = JSON.parse(text);
+      // Tangkap nama karakter secara otomatis
+      var foundNames = extractUniqueNames(json);
+      foundNames.forEach(function(n) { allExtractedNames[n] = true; });
       var detected = detectJsonStructure(json);
 
       if (detected) {
@@ -1900,7 +1904,7 @@ async function createNewProject() {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     glossary: [],
-    nameDict: [],
+    nameDict: Object.keys(allExtractedNames).map(function(n) { return { source: n, target: '' }; }),
     files: projectFiles,
     settings: {}
   };
@@ -2007,6 +2011,26 @@ function exportTranslated() {
 /* ============================================================
    SECTION 9: JSON STRUCTURE DETECTION
    ============================================================ */
+/* Fungsi khusus untuk menyisir JSON dan mengambil semua nama karakter unik */
+function extractUniqueNames(jsonData) {
+  var names = {};
+  var itemsToScan = Array.isArray(jsonData) ? jsonData : Object.values(jsonData);
+  
+  itemsToScan.forEach(function(item) {
+    if (Array.isArray(item)) {
+      item.forEach(function(obj) {
+        if (obj && typeof obj === 'object') {
+          var n = obj.name || obj.speaker || obj.character;
+          if (n && typeof n === 'string' && n.trim()) names[n.trim()] = true;
+        }
+      });
+    } else if (item && typeof item === 'object') {
+      var n2 = item.name || item.speaker || item.character;
+      if (n2 && typeof n2 === 'string' && n2.trim()) names[n2.trim()] = true;
+    }
+  });
+  return Object.keys(names);
+   }
 function detectJsonStructure(json) {
   // Case 1: Array of strings
   if (Array.isArray(json) && json.length > 0 && typeof json[0] === 'string') {
@@ -2052,10 +2076,26 @@ function detectJsonStructure(json) {
 }
 
 function findFirstStringKey(obj) {
+  // 1. Prioritas utama: Cari kunci yang memang khusus buat isi teks/dialog
+  var preferredKeys = ['message', 'text', 'dialogue', 'dialog', 'msg', 'content', 'line', 'string', 'value'];
+  for (var p = 0; p < preferredKeys.length; p++) {
+    if (obj.hasOwnProperty(preferredKeys[p]) && typeof obj[preferredKeys[p]] === 'string' && obj[preferredKeys[p]].trim().length > 0) {
+      return preferredKeys[p];
+    }
+  }
+
+  // 2. Kalau nggak ketemu yang diinginkan, cari string lainnya, TAPI hindari metadata game
+  var ignoredKeys = ['name', 'speaker', 'character', 'actor', 'face', 'img', 'image', 'background', 'bg', 'bgm', 'se', 'sound', 'voice', 'choice', 'choices', 'condition', 'script', 'effect'];
   var keys = Object.keys(obj);
   for (var i = 0; i < keys.length; i++) {
-    if (typeof obj[keys[i]] === 'string' && obj[keys[i]].trim().length > 0) return keys[i];
+    var keyLower = keys[i].toLowerCase();
+    var isIgnored = ignoredKeys.some(function(ignored) { return keyLower === ignored; });
+    
+    if (!isIgnored && typeof obj[keys[i]] === 'string' && obj[keys[i]].trim().length > 0) {
+      return keys[i];
+    }
   }
+  
   return null;
 }
 
