@@ -1096,6 +1096,9 @@ select.form-input { cursor: pointer; }
   <button class="btn-icon" onclick="openSidePanel('glossaryPanel')" title="Glossary">
     <i class="fas fa-book"></i>
   </button>
+  <button class="btn-icon" onclick="openSidePanel('nameDictPanel')" title="Nama Karakter">
+    <i class="fas fa-user-tag"></i>
+  </button>
   <button class="btn-icon" onclick="openSidePanel('searchPanel')" title="Cari & Ganti">
     <i class="fas fa-search"></i>
   </button>
@@ -1302,6 +1305,37 @@ select.form-input { cursor: pointer; }
   </div>
 </div>
 <!-- ==========================================
+     KAMUS NAMA KARAKTER PANEL
+     ========================================== -->
+<div class="side-panel" id="nameDictPanel">
+  <div class="panel-header">
+    <i class="fas fa-user-tag" style="color:var(--accent)"></i>
+    <h3>Kamus Nama Karakter</h3>
+    <button class="btn-icon" onclick="closeAllPanels()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="panel-body">
+    <div class="form-group">
+      <label class="form-label">Nama Asli (Kanji/Katakana)</label>
+      <input class="form-input" id="nameDictSourceInput" placeholder="例：湊あくあ">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Terjemahan Nama</label>
+      <input class="form-input" id="nameDictTargetInput" placeholder="Contoh: Minato Aqua">
+    </div>
+    <button class="btn btn-primary" onclick="addNameDictEntry()" style="width:100%;margin-bottom:4px">
+      <i class="fas fa-plus"></i> Tambah
+    </button>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:.82rem;color:var(--text-secondary)">Daftar (<span id="nameDictCountText">0</span>)</span>
+      <button class="btn btn-small btn-secondary" onclick="clearAllNameDict()">
+        <i class="fas fa-trash"></i> Hapus Semua
+      </button>
+    </div>
+    <div class="glossary-list" id="nameDictListContainer"></div>
+  </div>
+</div>
+  <!-- ==========================================
      CREATE PROJECT MODAL
      ========================================== -->
 <div class="modal-backdrop" id="createModal">
@@ -1672,6 +1706,7 @@ function openSidePanel(panelId) {
     // Populate panel content saat dibuka
     if (panelId === 'settingsPanel') populateSettingsPanel();
     if (panelId === 'glossaryPanel') renderGlossaryList();
+    if (panelId === 'nameDictPanel') renderNameDictList();
   }, 10);
 }
 
@@ -1865,6 +1900,7 @@ async function createNewProject() {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     glossary: [],
+    nameDict: [],
     files: projectFiles,
     settings: {}
   };
@@ -1977,11 +2013,12 @@ function detectJsonStructure(json) {
     return { files: [createFileObject('data.json', json.map(function(t, i) { return createEntry(i, t); }))] };
   }
 
-  // Case 2: Array of objects
+    // Case 2: Array of objects
   if (Array.isArray(json) && json.length > 0 && typeof json[0] === 'object' && json[0] !== null) {
     var textKey = findFirstStringKey(json[0]);
+    var nameKey = (json[0].hasOwnProperty('name')) ? 'name' : (json[0].hasOwnProperty('speaker') ? 'speaker' : null);
     if (textKey) {
-      return { files: [createFileObject('data.json', json.map(function(obj, i) { return createEntry(i, obj[textKey] || ''); }))] };
+      return { files: [createFileObject('data.json', json.map(function(obj, i) { return createEntry(i, obj[textKey] || '', obj[nameKey] || ''); }))] };
     }
     // Fallback: cari string di nested structure
     var nestedStrings = extractAllStrings(json);
@@ -2002,8 +2039,9 @@ function detectJsonStructure(json) {
         files.push(createFileObject(key + '.json', value.map(function(t, i) { return createEntry(i, t); })));
       } else if (typeof value[0] === 'object' && value[0] !== null) {
         var strKey = findFirstStringKey(value[0]);
+        var nameKey = (value[0].hasOwnProperty('name')) ? 'name' : (value[0].hasOwnProperty('speaker') ? 'speaker' : null);
         if (strKey) {
-          files.push(createFileObject(key + '.json', value.map(function(obj, i) { return createEntry(i, obj[strKey] || ''); })));
+          files.push(createFileObject(key + '.json', value.map(function(obj, i) { return createEntry(i, obj[strKey] || '', obj[nameKey] || ''); })));
         }
       }
     }
@@ -2041,7 +2079,9 @@ function extractAllStrings(arr) {
 }
 
 function createFileObject(name, entries) { return { name: name, entries: entries }; }
-function createEntry(index, text) { return { id: 'e' + index, original: text, translated: '', status: 'pending' }; }
+function createEntry(index, text, name) { 
+  return { id: 'e' + index, original: text, originalName: name || '', translated: '', status: 'pending' }; 
+}
 /* ============================================================
    SECTION 10: EDITOR RENDERING
    ============================================================ */
@@ -2393,7 +2433,8 @@ async function startTranslation() {
 
       // Bangun teks
       var textBlock = batch.map(function(entry, idx) {
-        return (idx + 1) + '. ' + entry.original;
+        var prefix = entry.originalName ? '[' + entry.originalName + '] ' : '';
+        return (idx + 1) + '. ' + prefix + entry.original;
       }).join('\n');
 
       // Bangun glossary section
@@ -2403,8 +2444,16 @@ async function startTranslation() {
           glossary.map(function(g) { return g.source + ' \u2192 ' + g.target; }).join('\n') +
           '\nWAJIB gunakan glossary di atas sebagai referensi utama.\n';
       }
+       // Bangun kamus nama karakter section
+      var nameDict = project.nameDict || [];
+      var nameDictSection = '';
+      if (nameDict.length > 0) {
+        nameDictSection = '\n[KAMUS NAMA KARAKTER]\n' +
+          nameDict.map(function(n) { return n.source + ' \u2192 ' + n.target; }).join('\n') +
+          '\nWAJIB gunakan kamus nama di atas. JANGAN mengubah atau menerjemahkan nama karakter selain sesuai kamus ini.\n';
+      }
 
-      var fullPrompt = prompt + glossarySection + '\n[TEKS]\n' + textBlock;
+      var fullPrompt = prompt + glossarySection + nameDictSection + '\n[TEKS]\n' + textBlock;
 
       try {
         var resultText = await callGeminiAPI(fullPrompt, model, APP.settings.apiKey);
@@ -2591,7 +2640,69 @@ function clearAllGlossary() {
   renderGlossaryList();
   showToast('Glossary dihapus semua', 'success');
 }
+/* ============================================================
+   KAMUS NAMA KARAKTER MANAGEMENT
+   ============================================================ */
+function renderNameDictList() {
+  var project = getCurrentProject();
+  if (!project) return;
+  getElement('nameDictCountText').textContent = project.nameDict.length;
 
+  var container = getElement('nameDictListContainer');
+  if (project.nameDict.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:.85rem">Belum ada nama terdeteksi / ditambahkan</div>';
+    return;
+  }
+
+  container.innerHTML = project.nameDict.map(function(item, index) {
+    return '<div class="glossary-item">' +
+      '<span class="glossary-source">' + escapeHtml(item.source) + '</span>' +
+      '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
+      '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
+      '<button class="btn-icon" onclick="removeNameDictEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
+    '</div>';
+  }).join('');
+}
+
+function addNameDictEntry() {
+  var source = getElement('nameDictSourceInput').value.trim();
+  var target = getElement('nameDictTargetInput').value.trim();
+  if (!source || !target) { showToast('Isi kedua field', 'warning'); return; }
+
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var duplicate = project.nameDict.some(function(n) { return n.source === source; });
+  if (duplicate) { showToast('"' + source + '" sudah ada di kamus nama', 'warning'); return; }
+
+  project.nameDict.push({ source: source, target: target });
+  project.updatedAt = Date.now();
+  saveProjects();
+
+  getElement('nameDictSourceInput').value = '';
+  getElement('nameDictTargetInput').value = '';
+  renderNameDictList();
+  showToast('Nama ditambahkan', 'success');
+}
+
+function removeNameDictEntry(index) {
+  var project = getCurrentProject();
+  if (!project) return;
+  project.nameDict.splice(index, 1);
+  project.updatedAt = Date.now();
+  saveProjects();
+  renderNameDictList();
+}
+
+function clearAllNameDict() {
+  var project = getCurrentProject();
+  if (!project || project.nameDict.length === 0) return;
+  project.nameDict = [];
+  project.updatedAt = Date.now();
+  saveProjects();
+  renderNameDictList();
+  showToast('Kamus nama dihapus semua', 'success');
+   }
 
 /* ============================================================
    SECTION 16: SEARCH & REPLACE
