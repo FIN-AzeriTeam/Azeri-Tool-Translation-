@@ -6,6 +6,7 @@
 <title>RPGTrans - Game Translation Tool</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ==========================================
    RESET & CSS VARIABLES
@@ -1043,6 +1044,27 @@ select.form-input { cursor: pointer; }
     overflow-y: auto;
   }
 }
+   /* Styling Input Langsung di Kamus Nama */
+.name-dict-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 4px 6px;
+  outline: none;
+  transition: all 0.2s;
+}
+.name-dict-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-input);
+}
+.name-dict-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+   }
 </style>
 </head>
 <body>
@@ -1904,7 +1926,7 @@ for (var i = 0; i < fileInputs.length; i++) {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     glossary: [],
-    nameDict: Object.keys(allExtractedNames).map(function(n) { return { source: n, target: '' }; }),
+    nameDict: Object.keys(allExtractedNames).map(function(n) { return { source: n, target: '', isAuto: true }; }),
     files: projectFiles,
     settings: {}
   };
@@ -1992,20 +2014,66 @@ function restoreFromBackup() {
   };
   reader.readAsText(fileInput);
 }
-
-function exportTranslated() {
+/* Fungsi untuk merakit ulang JSON (Sudah support ganti nama karakter) */
+function rebuildJson(file, nameDict) {
+  var isObjectArray = file.entries.length > 0 && file.entries[0].originalName;
+  
+  if (isObjectArray) {
+    return file.entries.map(function(entry) {
+      var obj = { "message": entry.translated || entry.original };
+      if (entry.originalName) {
+        // Cek apakah nama ini ada di kamus dan udah diterjemahkan
+        var finalName = entry.originalName;
+        var dictMatch = nameDict.find(function(d) { return d.source === entry.originalName; });
+        if (dictMatch && dictMatch.target.trim() !== '') {
+          finalName = dictMatch.target; // Pakai nama terjemahan dari kamus
+        }
+        obj.name = finalName;
+      }
+      return obj;
+    });
+  } else {
+    return file.entries.map(function(entry) {
+      return entry.translated || entry.original;
+    });
+  }
+   }
+async function exportTranslated() {
   var project = getCurrentProject();
   if (!project) return;
-  var output = {};
-  project.files.forEach(function(file) {
-    output[file.name] = file.entries.map(function(entry) {
-      return { original: entry.original, translated: entry.translated };
-    });
-  });
+
   var safeName = project.name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-  downloadFile(safeName + '_translated.json', JSON.stringify(output, null, 2));
-  showToast('Hasil terjemahan diunduh', 'success');
-}
+
+  if (project.files.length === 1) {
+    // JIKA FILE CUMA 1: Download langsung bentuk JSON
+    var jsonData = rebuildJson(project.files[0], project.nameDict);
+    downloadFile(safeName + '_' + project.files[0].name, JSON.stringify(jsonData, null, 2));
+    showToast('File berhasil diunduh', 'success');
+    
+  } else {
+    // JIKA FILE LEBIH DARI 1: Ubah jadi ZIP
+    showToast('Sedang membuat file ZIP...', 'info');
+    try {
+      var zip = new JSZip();
+      
+      project.files.forEach(function(file) {
+        var jsonData = rebuildJson(file, project.nameDict);
+        zip.file(file.name, JSON.stringify(jsonData, null, 2));
+      });
+
+      var blob = await zip.generateAsync({ type: "blob" });
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = safeName + '_translated.zip';
+      link.click();
+      URL.revokeObjectURL(link.href);
+      
+      showToast('File ZIP berhasil diunduh (' + project.files.length + ' file)', 'success');
+    } catch (error) {
+      showToast('Gagal membuat ZIP: ' + error.message, 'error');
+    }
+  }
+   }
 
 
 /* ============================================================
@@ -2636,7 +2704,7 @@ function renderGlossaryList() {
       '<span class="glossary-source">' + escapeHtml(item.source) + '</span>' +
       '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
       '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
-      '<button class="btn-icon" onclick="removeGlossaryEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
+      (item.isAuto ? '<button class="btn-icon" disabled style="opacity:0.3;cursor:not-allowed" title="Dari file asli"><i class="fas fa-lock"></i></button>' : '<button class="btn-icon" onclick="removeNameDictEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>') +
     '</div>';
   }).join('');
 }
@@ -2698,12 +2766,20 @@ function renderNameDictList() {
     return '<div class="glossary-item">' +
       '<span class="glossary-source">' + escapeHtml(item.source) + '</span>' +
       '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
-      '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
+      '<input class="name-dict-input" type="text" value="' + escapeAttribute(item.target) + '" placeholder="Ketik terjemahan..." onchange="editNameDictTarget(' + index + ', this.value)">' +
       '<button class="btn-icon" onclick="removeNameDictEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
     '</div>';
   }).join('');
 }
 
+/* Fungsi baru untuk menyimpan saat selesai mengetik */
+function editNameDictTarget(index, newValue) {
+  var project = getCurrentProject();
+  if (!project) return;
+  project.nameDict[index].target = newValue.trim();
+  project.updatedAt = Date.now();
+  saveProjects();
+   }
 function addNameDictEntry() {
   var source = getElement('nameDictSourceInput').value.trim();
   var target = getElement('nameDictTargetInput').value.trim();
