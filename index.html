@@ -29,9 +29,9 @@
   --text-primary: #e4e4f8;
   --text-secondary: #9898c0;
   --text-muted: #5a5a88;
-  --accent: #e89830;
-  --accent-hover: #d48020;
-  --accent-glow: rgba(232, 152, 48, 0.15);
+  --accent: #ff4081; 
+  --accent-hover: #e91e63;
+  --accent-glow: rgba(255, 64, 129, 0.2);
   --color-success: #18c870;
   --color-error: #f03838;
   --color-info: #3888f0;
@@ -204,7 +204,7 @@ select.form-input { cursor: pointer; }
 }
 
 /* ==========================================
-   HOME PAGE
+   HOME PAGE 
    ========================================== */
 #homePage {
   height: 100vh;
@@ -214,26 +214,23 @@ select.form-input { cursor: pointer; }
 }
 
 .home-header {
-  padding: 28px 32px 0;
+  padding: 40px 32px 0;
   flex-shrink: 0;
 }
 
 .home-brand h1 {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--accent) 0%, #f0c050 50%, var(--accent) 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 4s linear infinite;
+  letter-spacing: -1px;
+  color: #ffffff; 
+  text-shadow: 0 0 20px rgba(255, 64, 129, 0.3); 
 }
-@keyframes shimmer { to { background-position: 200% center; } }
 
 .home-brand p {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
 }
 
 .home-actions {
@@ -327,7 +324,7 @@ select.form-input { cursor: pointer; }
 }
 .pc-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), #f0c860);
+  background: linear-gradient(90deg, #ff4081, #7c4dff);
   border-radius: 3px;
   transition: width 0.4s ease;
 }
@@ -818,7 +815,7 @@ select.form-input { cursor: pointer; }
 }
 .tm-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), #f0c860);
+  background: linear-gradient(90deg, #ff4081, #7c4dff);
   border-radius: 4px;
   transition: width 0.3s;
 }
@@ -1088,8 +1085,8 @@ select.form-input { cursor: pointer; }
 <div id="homePage">
   <div class="home-header">
     <div class="home-brand">
-      <h1>RPGTrans</h1>
-      <p>Game Translation Tool v1.0</p>
+            <h1>Azeri Tool</h1>
+      <p>beta version 0.27</p>
     </div>
   </div>
 
@@ -1109,6 +1106,9 @@ select.form-input { cursor: pointer; }
       <input class="form-input" id="searchProjectInput" placeholder="Cari project..." oninput="renderHomeProjects()">
     </div>
     <div class="project-grid" id="projectGrid"></div>
+  <div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;">
+      Fin Development
+    </div>
   </div>
 </div>
 
