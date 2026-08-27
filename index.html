@@ -622,6 +622,26 @@ select.form-input { cursor: pointer; }
   line-height: 1.6;
   transition: background var(--transition-speed);
 }
+   /* Styling textarea */
+.col-translated textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-family: inherit; 
+  line-height: 1.6;
+  resize: none; /* Inget fin icon drag resize udah dihilangkan */
+  min-height: 40px;
+  transition: background var(--transition-speed);
+}
+.col-translated textarea:focus {
+  background: var(--bg-input);
+  outline: none;
+}
+.col-translated textarea.status-translated { color: var(--color-success); }
+.col-translated textarea.status-edited { color: var(--accent); }
 .col-translated input:focus {
   background: var(--bg-input);
   outline: none;
@@ -926,13 +946,12 @@ select.form-input { cursor: pointer; }
 }
 
 @media (max-width: 540px) {
-@media (max-width: 540px) {
   .side-panel { width: 100%; max-width: 100vw; }
   .home-brand h1 { font-size: 1.4rem; }
 
   /* ================= PERBAIKAN SIDEBAR HP ================= */
   .sidebar-toggle { 
-    display: flex; /* Dari aslinya 'display: none' yang bikin tombol ilang */
+    display: flex; /* Dari aslinya 'display: none' yang bikin tombolnya ilang */
   }
 
   .editor-sidebar {
@@ -940,7 +959,7 @@ select.form-input { cursor: pointer; }
     top: 0;
     left: -260px;
     width: 250px;
-    height: 100vh; /* Dari aslinya '100px' yang bikin sidebar kepotong */
+    height: 100vh; /*  '100px' bangke bikin bug asu */
     z-index: 80;
     transition: left 0.25s ease;
     background: var(--bg-secondary);
@@ -1011,14 +1030,17 @@ select.form-input { cursor: pointer; }
   }
 
   /* Kotak translate dibuat lebih besar */
-  .col-translated input {
+  .col-translated textarea {
     width: 100%;
     background: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 14px 16px !important;
-    min-height: 60px;
+    min-height: 100px;
     font-size: 0.9rem;
+    font-family: inherit;
+    resize: none;
+    overflow-y: auto;
   }
 }
 </style>
@@ -2116,7 +2138,7 @@ function renderEntriesTable() {
       '<td class="col-check"><input type="checkbox" ' + isChecked + ' onchange="toggleEntrySelection(\'' + entry.id + '\', this.checked)"></td>' +
       '<td class="col-num">' + rowNum + '</td>' +
       '<td class="col-original">' + escapeHtml(entry.original) + '</td>' +
-      '<td class="col-translated"><input class="' + inputClass + '" value="' + escapeAttribute(entry.translated) + '" onfocus="this.select()" onchange="onTranslationEdited(\'' + entry.id + '\', this.value)"></td>' +
+      '<td class="col-translated"><textarea class="' + inputClass + '" onfocus="this.select()" onchange="onTranslationEdited(\'' + entry.id + '\', this.value)">' + escapeHtml(entry.translated) + '</textarea></td>' +
       '<td class="col-status">' + statusIcon + '</td>' +
     '</tr>';
   }).join('');
