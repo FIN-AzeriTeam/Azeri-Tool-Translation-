@@ -2699,21 +2699,15 @@ function renderGlossaryList() {
     return;
   }
 
-    container.innerHTML = project.nameDict.map(function(item, index) {
-    // Cek apakah nama ini auto-deteksi atau manual
-    var actionButton = item.isAuto 
-      ? '<button class="btn-icon" disabled style="opacity:0.3;cursor:not-allowed" title="Dari file asli"><i class="fas fa-lock"></i></button>' 
-      : '<button class="btn-icon" onclick="removeNameDictEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>';
-
+    container.innerHTML = project.glossary.map(function(item, index) {
     return '<div class="glossary-item">' +
       '<span class="glossary-source">' + escapeHtml(item.source) + '</span>' +
       '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
-      '<input class="name-dict-input" type="text" value="' + escapeAttribute(item.target) + '" placeholder="Ketik terjemahan..." onchange="editNameDictTarget(' + index + ', this.value)">' +
-      actionButton +
+      '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
+      '<button class="btn-icon" onclick="removeGlossaryEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
     '</div>';
   }).join('');
 }
-
 function addGlossaryEntry() {
   var source = getElement('glossarySourceInput').value.trim();
   var target = getElement('glossaryTargetInput').value.trim();
