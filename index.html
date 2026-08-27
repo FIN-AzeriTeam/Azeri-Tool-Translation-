@@ -123,6 +123,8 @@ input, select, textarea, button {
 }
 
 .btn-icon {
+  display: flex;
+  align-items: center;
   width: 36px;
   height: 36px;
   padding: 0;
@@ -422,7 +424,7 @@ select.form-input { cursor: pointer; }
 .sidebar-title {
   display: flex;
   align-items: center;
-  gap: 8px; /* Menggantikan fungsi &nbsp; biar rapi */
+  gap: 8px; /* pake fungsi &nbsp aja fin; biar rapi -Gleen */
   padding: 14px 16px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -431,11 +433,11 @@ select.form-input { cursor: pointer; }
   letter-spacing: 1.2px;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  background: var(--bg-secondary); /* Paksa warnanya sama dengan sidebar, hilangkan blok aneh */
+  background: var(--bg-secondary); 
 }
 
 .sidebar-title i {
-  font-size: 0.8rem; /* Perbesar sedikit biar proporsional sama tulisan */
+  font-size: 0.8rem; 
   color: var(--text-secondary);
 }
 
