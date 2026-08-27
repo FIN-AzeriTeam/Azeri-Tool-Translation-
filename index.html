@@ -236,6 +236,12 @@ select.form-input { cursor: pointer; }
   letter-spacing: 0.5px;
 }
 
+.home-flower-icon {
+  -webkit-text-fill-color: var(--accent); 
+  margin-right: 10px;
+  font-size: 0.85em;
+}
+
 .home-actions {
   padding: 20px 32px;
   display: flex;
@@ -247,12 +253,15 @@ select.form-input { cursor: pointer; }
   flex: 1;
   overflow-y: auto;
   padding: 0 32px 32px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center; 
+  gap: 12px; /* ini udah diubah */
 }
-
 .home-stats {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  white-space: nowrap; 
 }
 .home-stats b {
   color: var(--accent);
@@ -261,7 +270,8 @@ select.form-input { cursor: pointer; }
 
 .search-wrap {
   position: relative;
-  margin-bottom: 20px;
+  flex: 1; 
+  min-width: 200px; 
 }
 .search-wrap i {
   position: absolute;
@@ -278,6 +288,7 @@ select.form-input { cursor: pointer; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
 .project-card {
@@ -308,7 +319,11 @@ select.form-input { cursor: pointer; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
+.pc-logo-icon {
+  color: var(--accent);
+  font-size: 1.1rem;
+  margin-right: 8px;
+}
 .pc-progress { margin-bottom: 14px; }
 .pc-progress-info {
   display: flex;
@@ -1088,7 +1103,7 @@ select.form-input { cursor: pointer; }
 <div id="homePage">
   <div class="home-header">
     <div class="home-brand">
-            <h1>Azeri Tool</h1>
+            <h1><i class="fas fa-fan home-flower-icon"></i> Azeri Tool</h1>
       <p>beta version 0.27</p>
     </div>
   </div>
@@ -1839,6 +1854,7 @@ function renderHomeProjects() {
 
     return '<div class="project-card">' +
       '<div class="pc-header">' +
+        '<i class="fas fa-file-lines pc-logo-icon"></i>' +
         '<span class="pc-name">' + escapeHtml(project.name) + '</span>' +
         '<span class="lang-tag">' + langLabel + '</span>' +
       '</div>' +
