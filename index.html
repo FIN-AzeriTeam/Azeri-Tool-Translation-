@@ -2018,18 +2018,21 @@ function restoreFromBackup() {
 function rebuildJson(file, nameDict) {
   var isObjectArray = file.entries.length > 0 && file.entries[0].originalName;
   
-  if (isObjectArray) {
+    if (isObjectArray) {
     return file.entries.map(function(entry) {
-      var obj = { "message": entry.translated || entry.original };
+      var obj = {};
+      
       if (entry.originalName) {
-        // Cek apakah nama ini ada di kamus dan udah diterjemahkan
         var finalName = entry.originalName;
         var dictMatch = nameDict.find(function(d) { return d.source === entry.originalName; });
         if (dictMatch && dictMatch.target.trim() !== '') {
-          finalName = dictMatch.target; // Pakai nama terjemahan dari kamus
+          finalName = dictMatch.target; 
         }
         obj.name = finalName;
       }
+      
+      obj.message = entry.translated || entry.original;
+      
       return obj;
     });
   } else {
