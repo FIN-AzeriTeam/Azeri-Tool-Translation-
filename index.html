@@ -2489,6 +2489,18 @@ async function startTranslation() {
     openSidePanel('settingsPanel');
     return;
   }
+     // Konfirmasi sebelum mulai
+  var confirmMsg = '';
+  if (APP.selectedFileIndices.size > 0) {
+    confirmMsg = 'Translate ' + APP.selectedFileIndices.size + ' file yang dipilih?';
+  } else if (APP.selectedEntryIds.size > 0) {
+    confirmMsg = 'Translate ' + APP.selectedEntryIds.size + ' baris yang dipilih?';
+  } else {
+    var file = getCurrentFile();
+    var untranslated = file ? file.entries.filter(function(e) { return !e.translated; }).length : 0;
+    confirmMsg = 'Translate ' + untranslated + ' baris belum diterjemahkan di file ini?';
+  }
+  if (!confirm(confirmMsg)) return;
 
   var project = getCurrentProject();
   if (!project) return;
@@ -2522,6 +2534,17 @@ async function startTranslation() {
     showToast('Tidak ada baris yang perlu diterjemahkan. Pilih baris atau centang file.', 'warning');
     return;
   }
+     // Peringatan kalau ada baris manual edit yang akan ditimpa
+  var willOverwrite = 0;
+  filesToProcess.forEach(function(fp) {
+    fp.file.entries.forEach(function(e) {
+      var shouldTranslate = APP.selectedEntryIds.size > 0
+        ? APP.selectedEntryIds.has(e.id)
+        : !e.translated;
+      if (shouldTranslate && e.status === 'edited') willOverwrite++;
+    });
+  });
+  if (willOverwrite > 0 && !confirm(willOverwrite + ' baris yang sudah kamu edit manual akan ditimpa. Lanjutkan?')) return;
 
   // Hitung total entri
   var totalEntries = 0;
@@ -2607,6 +2630,18 @@ async function startTranslation() {
         var resultLines = resultText.split('\n').filter(function(line) {
           return /^\d+[\.\)]\s*/.test(line.trim());
         });
+                 // Fallback: kalau AI tidak pakai format nomor, pecah per baris langsung
+        if (resultLines.length === 0) {
+          var rawLines = resultText.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+          // Hilangkan baris yang jelas bukan terjemahan (markdown, penjelasan)
+          rawLines = rawLines.filter(function(l) {
+            return !/^[\[\(#]/.test(l) && l.length > 0 && l.length < 2000;
+          });
+          if (rawLines.length >= batch.length * 0.5) {
+            resultLines = rawLines;
+            addTranslateLog('Format nomor tidak terdeteksi, menggunakan parse baris langsung', 'info');
+          }
+          }
 
         batch.forEach(function(entry, idx) {
           if (resultLines[idx]) {
@@ -2634,9 +2669,42 @@ async function startTranslation() {
         renderEntriesTable();
         renderFileList();
 
-      } catch (error) {
+            } catch (error) {
         addTranslateLog('Error batch ' + batchNumber + ': ' + error.message, 'error');
 
+        // Handle rate limit — adaptive delay + retry
+        if (error.message.indexOf('429') !== -1 || error.message.indexOf('RATE_LIMIT') !== -1 || error.message.indexOf('quota') !== -1) {
+          currentDelay = Math.min(30, currentDelay + 3);
+          getElement('translateDelay').textContent = currentDelay;
+          addTranslateLog('Rate limited! Delay dinaikkan ke ' + currentDelay + 's. Menunggu...', 'error');
+          await sleep(currentDelay * 1000);
+          i -= batchSize; // Ulangi batch ini
+          continue;
+        }
+
+        // Handle invalid API key — stop total
+        if (error.message.indexOf('API key') !== -1 || error.message.indexOf('invalid') !== -1 || error.message.indexOf('UNAUTHENTICATED') !== -1) {
+          addTranslateLog('API Key tidak valid! Dihentikan.', 'error');
+          break;
+        }
+
+        // Handle server error (500, 503) — retry 2x sebelum skip
+        if (error.message.indexOf('500') !== -1 || error.message.indexOf('503') !== -1 || error.message.indexOf('SERVER_ERROR') !== -1) {
+          if (!batch._retryCount) batch._retryCount = 0;
+          batch._retryCount++;
+          if (batch._retryCount <= 2) {
+            addTranslateLog('Server error, retry ' + batch._retryCount + '/2...', 'error');
+            await sleep(5000);
+            i -= batchSize;
+            continue;
+          }
+          addTranslateLog('Retry gagal 2x, skip batch ini.', 'error');
+          continue;
+        }
+
+        // Error lainnya — skip batch
+        addTranslateLog('Skip batch, lanjut...', 'info');
+   }
         // Handle rate limit — adaptive delay
         if (error.message.indexOf('429') !== -1 || error.message.indexOf('RATE_LIMIT') !== -1 || error.message.indexOf('quota') !== -1) {
           currentDelay = Math.min(30, currentDelay + 3);
