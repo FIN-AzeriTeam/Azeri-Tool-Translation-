@@ -2640,9 +2640,7 @@ async function startTranslation() {
           if (rawLines.length >= batch.length * 0.5) {
             resultLines = rawLines;
             addTranslateLog('Format nomor tidak terdeteksi, menggunakan parse baris langsung', 'info');
-          }
-          }
-
+          }          
         batch.forEach(function(entry, idx) {
           if (resultLines[idx]) {
             var translated = resultLines[idx].replace(/^\d+[\.\)]\s*/, '').trim();
