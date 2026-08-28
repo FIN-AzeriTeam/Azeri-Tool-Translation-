@@ -1246,10 +1246,10 @@ select.form-input { cursor: pointer; }
     <div class="form-group">
       <label class="form-label">Model AI</label>
       <select class="form-input" id="settingModel">
-        <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp (Terbaru)</option>
-        <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Cepat & Hemat)</option>
-        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Paling Akurat)</option>
-      </select>
+      <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (New)</option>
+      <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stabil)</option>
+      <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
+    </select>
       <div class="form-hint">Flash = cepat & murah. Pro = akurat tapi lambat & boros quota.</div>
     </div>
     <div class="form-group">
@@ -1614,15 +1614,17 @@ var APP = {
   // Hasil pencarian
   searchResults: [],
   searchResultIndex: -1,
+  lastSearchQuery: '',          
+  replaceExcludedIds: new Set(),
 
-  // Target operasi sementara (delete, edit)
+ // Target operasi sementara (delete, edit)
   deleteTargetId: null,
   editTargetId: null,
 
   // Pengaturan AI (global, disimpan terpisah)
   settings: {
     apiKey: '',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     batchSize: 50,
     delay: 3,
     sourceLang: 'ja',
@@ -2862,7 +2864,11 @@ function clearAllNameDict() {
    SECTION 16: SEARCH & REPLACE
    ============================================================ */
 function executeSearch() {
-  var query = getElement('searchQueryInput').value.trim().toLowerCase();
+  var query = getElement('searchQueryInput').value.trim().toLowerCase();  
+if (query !== APP.lastSearchQuery) {
+  APP.replaceExcludedIds.clear();
+  APP.lastSearchQuery = query;
+}
   var scope = getElement('searchScopeSelect').value;
   var results = [];
 
@@ -2893,7 +2899,9 @@ function executeSearch() {
         });
       }
     });
-  });
+    results = results.filter(function(r) {
+      return !APP.replaceExcludedIds.has(r.entryId);
+    });
 
   APP.searchResults = results;
   APP.searchResultIndex = -1;
@@ -2949,13 +2957,18 @@ function replaceSingleMatch() {
   if (!query) return;
 
   var idx = APP.searchResultIndex >= 0 ? APP.searchResultIndex : 0;
-  if (idx >= APP.searchResults.length) idx = 0;
+  if (idx >= APP.searchResults.length) {
+    showToast('Semua hasil sudah diproses', 'info');
+    return;
+  }
+
   var result = APP.searchResults[idx];
   if (!result) return;
 
   var project = getCurrentProject();
   var entry = project.files[result.fileIndex].entries[result.entryIndex];
   var newTrans = entry.translated.replace(new RegExp(escapeRegex(query), 'i'), replacement);
+
   if (newTrans !== entry.translated) {
     entry.translated = newTrans;
     entry.status = 'edited';
@@ -2963,10 +2976,18 @@ function replaceSingleMatch() {
     saveProjects();
   }
 
+  // Kalau hasil replace masih mengandung query, exclude dari pencarian
+  if (newTrans.toLowerCase().indexOf(query.toLowerCase()) !== -1) {
+    APP.replaceExcludedIds.add(result.entryId);
+  }
+
   APP.searchResultIndex = idx + 1;
   executeSearch();
   renderEntriesTable();
-  showToast('1 penggantian dilakukan', 'success');
+
+  if (APP.searchResults.length === 0) {
+    showToast('Semua hasil sudah diganti', 'success');
+  }
 }
 
 function replaceAllMatches() {
