@@ -2899,9 +2899,11 @@ if (query !== APP.lastSearchQuery) {
         });
       }
     });
-    results = results.filter(function(r) {
-      return !APP.replaceExcludedIds.has(r.entryId);
-    });
+  });
+
+  results = results.filter(function(r) {
+    return !APP.replaceExcludedIds.has(r.entryId);
+  });
 
   APP.searchResults = results;
   APP.searchResultIndex = -1;
