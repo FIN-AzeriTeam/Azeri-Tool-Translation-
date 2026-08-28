@@ -2669,7 +2669,7 @@ async function startTranslation() {
         renderEntriesTable();
         renderFileList();
 
-            } catch (error) {
+        } catch (error) {
         addTranslateLog('Error batch ' + batchNumber + ': ' + error.message, 'error');
 
         // Handle rate limit — adaptive delay + retry
@@ -2704,27 +2704,7 @@ async function startTranslation() {
 
         // Error lainnya — skip batch
         addTranslateLog('Skip batch, lanjut...', 'info');
-   }
-        // Handle rate limit — adaptive delay
-        if (error.message.indexOf('429') !== -1 || error.message.indexOf('RATE_LIMIT') !== -1 || error.message.indexOf('quota') !== -1) {
-          currentDelay = Math.min(30, currentDelay + 3);
-          getElement('translateDelay').textContent = currentDelay;
-          addTranslateLog('Rate limited! Delay dinaikkan ke ' + currentDelay + 's. Menunggu...', 'error');
-          await sleep(currentDelay * 1000);
-          i -= batchSize; // Ulangi batch ini
-          continue;
-        }
-
-        // Handle invalid API key
-        if (error.message.indexOf('API key') !== -1 || error.message.indexOf('invalid') !== -1) {
-          addTranslateLog('API Key tidak valid! Dihentikan.', 'error');
-          break;
-        }
-
-        // Error lain: skip batch ini
-        addTranslateLog('Skip batch, lanjut...', 'info');
       }
-
       // Delay antar request
       if (i + batchSize < fileData.entries.length && !APP.translationCancelled && currentDelay > 0) {
         await sleep(currentDelay * 1000);
