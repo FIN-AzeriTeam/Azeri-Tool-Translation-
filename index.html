@@ -1246,9 +1246,12 @@ select.form-input { cursor: pointer; }
     <div class="form-group">
       <label class="form-label">Model AI</label>
       <select class="form-input" id="settingModel">
-      <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (New)</option>
-      <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stabil)</option>
-      <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legacy)</option>
+      <option value="gemini-3.7-flash">Gemini 3.7 Flash (Terbaru)</option>
+      <option value="gemini-3.6-flash" selected>Gemini 3.6 Flash (Stabil)</option>
+      <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+      <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite (Paling Ringan)</option>
+      <option value="gemini-3.5-pro">Gemini 3.5 Pro (Akurat)</option>
+      <option value="gemini-3.1-pro">Gemini 3.1 Pro (Legacy)</option>
     </select>
       <div class="form-hint">Flash = cepat & murah. Pro = akurat tapi lambat & boros quota.</div>
     </div>
@@ -2554,7 +2557,7 @@ async function startTranslation() {
   var currentDelay = Math.max(0, APP.settings.delay || 3);
   var lang = project.sourceLang || 'ja';
   var prompt = APP.settings.customPrompt || DEFAULT_PROMPTS[lang] || DEFAULT_PROMPTS.ja;
-  var model = APP.settings.model || 'gemini-1.5-flash';
+  var model = APP.settings.model || 'gemini-3.6-flash';
   var glossary = project.glossary || [];
 
   APP.isTranslating = true;
