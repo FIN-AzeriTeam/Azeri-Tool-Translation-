@@ -1414,6 +1414,13 @@ select.form-input { cursor: pointer; }
         <label class="form-label">Nama Project</label>
         <input class="form-input" id="createProjectName" placeholder="Contoh: Game RPG Chapter 1">
       </div>
+            <div class="form-group">
+        <label class="form-label">Tipe Project</label>
+        <select class="form-input" id="createProjectType">
+          <option value="rpg">RPG</option>
+          <option value="vn">Visual Novel</option>
+        </select>
+      </div>
       <div class="form-group">
         <label class="form-label">Sumber Bahasa</label>
         <select class="form-input" id="createProjectLang">
@@ -1541,59 +1548,132 @@ select.form-input { cursor: pointer; }
    SECTION 1: DEFAULT PROMPTS (RPG & VN Optimized)
    ============================================================ */
 var DEFAULT_PROMPTS = {
-  ja: 'Kamu adalah penerjemah profesional bahasa Jepang ke Bahasa Indonesia, spesialisasi game RPG dan Visual Novel.\n\n' +
+var DEFAULT_PROMPTS = {
+  vn_ja: 'Kamu adalah penerjemah profesional bahasa Jepang ke Bahasa Indonesia, spesialisasi Visual Novel.\n\n' +
     '[ATURAN UMUM]\n' +
-    '- Terjemahkan setiap baris secara akurat, natural, dan sesuai konteks\n' +
+    '- Terjemahkan setiap baris secara akurat dan natural\n' +
     '- Pertahankan format nomor baris: "angka. teks"\n' +
     '- JANGAN menambah atau mengurangi jumlah baris\n' +
-    '- JANGAN menambahkan penjelasan, catatan, atau komentar\n\n' +
-    '[ATURAN RPG & VISUAL NOVEL]\n' +
-    '- Dialog: bahasa sehari-hari natural, sesuai karakter\n' +
-    '- Narasi: bahasa deskriptif dan mengalir\n' +
-    '- Pilihan (choices): singkat, jelas, konsisten\n' +
-    '- Nama karakter: TETAP ASLI, jangan diterjemahkan\n' +
-    '- Honorifiks (さん、ちゃん、くん、さま、先輩、先生): pertahankan atau adaptasi natural\n' +
-    '- Istilah game WAJIB tetap asli: HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Accessory, Save, Load, Quest, Dungeon, Boss, Enemy, Battle, Menu, Config, Status, Equipment, Shop, Inn, Guild\n' +
-    '- Onomatope (ああ、うう、っ、ふん): sesuaikan konteks atau pertahankan jika sulit\n' +
-    '- Ekspresi khas (やだ、もう、ええっと): adaptasi natural ke bahasa Indonesia\n\n' +
+    '- JANGAN menambahkan penjelasan atau komentar\n\n' +
+    '[ATURAN VOICE - SANGAT PENTING]\n' +
+    '- Panjang kalimat HASIL harus mendekati panjang kalimat ASLI\n' +
+    '- Ada voice over yang harus sinkron dengan teks\n' +
+    '- Boleh sedikit lebih pendek atau panjang, tapi JANGAN drastis berbeda\n' +
+    '- Contoh: "分かりました！" → "Mengerti!" (bukan "Baik, saya mengerti dengan baik")\n\n' +
+    '[ATURAN DIALOG]\n' +
+    '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong", "kan"\n' +
+    '- Sesuaikan karakter: anak muda lebih santai, dewasa lebih sopan\n' +
+    '- Jangan terlalu formal di dialog\n\n' +
+    '[ATURAN MONOLOG/NARASI]\n' +
+    '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
+    '- Lebih deskriptif dan mengalir\n\n' +
+    '[NAMA KARAKTER]\n' +
+    '- Pertahankan nama asli, jangan diterjemahkan\n' +
+    '- Honorifiks (さん、ちゃん、くん) pertahankan atau adaptasi natural\n\n' +
     '[FORMAT YANG HARUS DIPERTAHANKAN]\n' +
-    '- \\\\n, \\\\r, \\\\t (baris baru, tab)\n' +
-    '- \\\\C[x] (kode warna), \\\\V[x] (variabel), \\\\N[x] (nama karakter), \\\\P[x] (posisi)\n' +
-    '- {nama}, <nama>, %s, %d (placeholder)\n' +
+    '- \\\\n, \\\\r, \\\\t, \\\\C[x], \\\\V[x], \\\\N[x], \\\\P[x]\n' +
+    '- {nama}, <nama>, %s, %d\n' +
     '- Angka, simbol, tanda baca khusus, kurung [ ] { } ( )\n\n' +
+    '[ISTILAH GAME - TETAP ASLI]\n' +
+    'HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Save, Load, Quest, Dungeon, Boss, Battle, Menu, Config, Status, Shop, Inn, Guild\n\n' +
+    '[CONTOH]\n' +
+    '1. こんにちは、冒険者さん。 → Halo, petualang.\n' +
+    '2. うう……助けて…… → Uuh... tolong...\n' +
+    '3. 分かりました！ → Mengerti!\n' +
+    '4. はい / いいえ → Ya / Tidak\n' +
+    '5. \\\\C[2]\\\\N[1]さん、行きましょう → \\\\C[2]\\\\N[1], ayo berangkat\n\n' +
+    'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...',
+
+  rpg_ja: 'Kamu adalah penerjemah profesional bahasa Jepang ke Bahasa Indonesia, spesialisasi game RPG.\n\n' +
+    '[ATURAN UMUM]\n' +
+    '- Terjemahkan setiap baris secara akurat dan natural\n' +
+    '- Pertahankan format nomor baris: "angka. teks"\n' +
+    '- JANGAN menambah atau mengurangi jumlah baris\n' +
+    '- JANGAN menambahkan penjelasan atau komentar\n' +
+    '- BOLEH memparafrase selama makna tetap sama — jangan terlalu literal\n\n' +
+    '[ATURAN DIALOG]\n' +
+    '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong", "kan"\n' +
+    '- Sesuaikan karakter: anak muda lebih santai, dewasa lebih sopan\n' +
+    '- Buat dialog terasa hidup, bukan seperti terjemahan mesin\n\n' +
+    '[ATURAN MONOLOG/NARASI]\n' +
+    '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
+    '- Lebih deskriptif dan mengalir, tapi jangan kaku\n\n' +
+    '[NAMA KARAKTER]\n' +
+    '- Pertahankan nama asli, jangan diterjemahkan\n' +
+    '- Honorifiks (さん、ちゃん、くん) pertahankan atau adaptasi natural\n\n' +
+    '[FORMAT YANG HARUS DIPERTAHANKAN]\n' +
+    '- \\\\n, \\\\r, \\\\t, \\\\C[x], \\\\V[x], \\\\N[x], \\\\P[x]\n' +
+    '- {nama}, <nama>, %s, %d\n' +
+    '- Angka, simbol, tanda baca khusus, kurung [ ] { } ( )\n\n' +
+    '[ISTILAH GAME - TETAP ASLI]\n' +
+    'HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Save, Load, Quest, Dungeon, Boss, Battle, Menu, Config, Status, Shop, Inn, Guild\n\n' +
     '[CONTOH]\n' +
     '1. こんにちは、冒険者さん。 → Halo, petualang.\n' +
     '2. HPが回復した！ → HP pulih!\n' +
-    '3. \\\\C[2]\\\\N[1]さん、冒険に出ませんか？ → \\\\C[2]\\\\N[1], mau pergi berpetualangan?\n' +
+    '3. \\\\C[2]\\\\N[1]さん、冒険に出ませんか？ → \\\\C[2]\\\\N[1], mau berpetualangan?\n' +
     '4. うう……助けて…… → Uuh... tolong...\n' +
     '5. はい / いいえ → Ya / Tidak\n\n' +
     'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...',
 
-  en: 'Kamu adalah penerjemah profesional bahasa Inggris ke Bahasa Indonesia, spesialisasi game RPG dan Visual Novel.\n\n' +
+  vn_en: 'Kamu adalah penerjemah profesional bahasa Inggris ke Bahasa Indonesia, spesialisasi Visual Novel.\n\n' +
     '[ATURAN UMUM]\n' +
-    '- Terjemahkan setiap baris secara akurat, natural, dan sesuai konteks\n' +
+    '- Terjemahkan setiap baris secara akurat dan natural\n' +
     '- Pertahankan format nomor baris: "angka. teks"\n' +
     '- JANGAN menambah atau mengurangi jumlah baris\n' +
-    '- JANGAN menambahkan penjelasan, catatan, atau komentar\n\n' +
-    '[ATURAN RPG & VISUAL NOVEL]\n' +
-    '- Dialog: bahasa sehari-hari natural, sesuai karakter\n' +
-    '- Narasi: bahasa deskriptif dan mengalir\n' +
-    '- Pilihan (choices): singkat, jelas, konsisten\n' +
-    '- Nama karakter: TETAP ASLI, jangan diterjemahkan\n' +
-    '- Istilah game WAJIB tetap asli: HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Accessory, Save, Load, Quest, Dungeon, Boss, Enemy, Battle, Menu, Config, Status, Equipment, Shop, Inn, Guild\n' +
-    '- Idiom dan ekspresi: adaptasi ke Indonesia yang sesuai, BUKAN terjemahan literal\n' +
-    '- Kata ganti: sesuaikan konteks (I/you/we tergantung karakter)\n\n' +
+    '- JANGAN menambahkan penjelasan atau komentar\n\n' +
+    '[ATURAN VOICE - SANGAT PENTING]\n' +
+    '- Panjang kalimat HASIL harus mendekati panjang kalimat ASLI\n' +
+    '- Ada voice over yang harus sinkron dengan teks\n' +
+    '- Boleh sedikit lebih pendek atau panjang, tapi JANGAN drastis berbeda\n\n' +
+    '[ATURAN DIALOG]\n' +
+    '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong"\n' +
+    '- Jangan terlalu formal di dialog\n\n' +
+    '[ATURAN MONOLOG/NARASI]\n' +
+    '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
+    '- Lebih deskriptif dan mengalir\n\n' +
+    '[NAMA KARAKTER]\n' +
+    '- Pertahankan nama asli, jangan diterjemahkan\n' +
+    '- Sesuaikan kata ganti (I/you/we) tergantung karakter\n\n' +
     '[FORMAT YANG HARUS DIPERTAHANKAN]\n' +
-    '- \\\\n, \\\\r, \\\\t (baris baru, tab)\n' +
-    '- \\\\C[x] (kode warna), \\\\V[x] (variabel), \\\\N[x] (nama karakter), \\\\P[x] (posisi)\n' +
-    '- {nama}, <nama>, %s, %d (placeholder)\n' +
+    '- \\\\n, \\\\r, \\\\t, \\\\C[x], \\\\V[x], \\\\N[x], \\\\P[x]\n' +
+    '- {nama}, <nama>, %s, %d\n' +
     '- Angka, simbol, tanda baca khusus, kurung [ ] { } ( )\n\n' +
+    '[ISTILAH GAME - TETAP ASLI]\n' +
+    'HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Save, Load, Quest, Dungeon, Boss, Battle, Menu, Config, Status, Shop, Inn, Guild\n\n' +
     '[CONTOH]\n' +
     '1. Hello, adventurer! → Halo, petualang!\n' +
-    '2. HP has been restored! → HP telah pulih!\n' +
-    '3. \\\\C[2]\\\\N[1], want to adventure? → \\\\C[2]\\\\N[1], mau pergi berpetualangan?\n' +
-    '4. I... I can\'t... → Aku... aku tidak bisa...\n' +
-    '5. Yes / No → Ya / Tidak\n\n' +
+    '2. I... I can\'t... → Aku... aku nggak bisa...\n' +
+    '3. Yes / No → Ya / Tidak\n\n' +
+    'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...',
+
+  rpg_en: 'Kamu adalah penerjemah profesional bahasa Inggris ke Bahasa Indonesia, spesialisasi game RPG.\n\n' +
+    '[ATURAN UMUM]\n' +
+    '- Terjemahkan setiap baris secara akurat dan natural\n' +
+    '- Pertahankan format nomor baris: "angka. teks"\n' +
+    '- JANGAN menambah atau mengurangi jumlah baris\n' +
+    '- JANGAN menambahkan penjelasan atau komentar\n' +
+    '- BOLEH memparafrase selama makna tetap sama — jangan terlalu literal\n\n' +
+    '[ATURAN DIALOG]\n' +
+    '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong"\n' +
+    '- Buat dialog terasa hidup, bukan seperti terjemahan mesin\n' +
+    '- Idiom dan ekspresi: adaptasi ke Indonesia, BUKAN terjemahan literal\n\n' +
+    '[ATURAN MONOLOG/NARASI]\n' +
+    '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
+    '- Lebih deskriptif dan mengalir, tapi jangan kaku\n\n' +
+    '[NAMA KARAKTER]\n' +
+    '- Pertahankan nama asli, jangan diterjemahkan\n' +
+    '- Sesuaikan kata ganti (I/you/we) tergantung karakter\n\n' +
+    '[FORMAT YANG HARUS DIPERTAHANKAN]\n' +
+    '- \\\\n, \\\\r, \\\\t, \\\\C[x], \\\\V[x], \\\\N[x], \\\\P[x]\n' +
+    '- {nama}, <nama>, %s, %d\n' +
+    '- Angka, simbol, tanda baca khusus, kurung [ ] { } ( )\n\n' +
+    '[ISTILAH GAME - TETAP ASLI]\n' +
+    'HP, MP, TP, EXP, LV, Skill, Item, Weapon, Armor, Save, Load, Quest, Dungeon, Boss, Battle, Menu, Config, Status, Shop, Inn, Guild\n\n' +
+    '[CONTOH]\n' +
+    '1. Hello, adventurer! → Halo, petualang!\n' +
+    '2. HP has been restored! → HP pulih!\n' +
+    '3. I... I can\'t... → Aku... aku nggak bisa...\n' +
+    '4. Yes / No → Ya / Tidak\n\n' +
     'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...'
 };
 
@@ -1903,11 +1983,14 @@ function renderHomeProjects() {
     });
     var percentage = totalEntries > 0 ? Math.round(translatedEntries / totalEntries * 100) : 0;
     var langLabel = project.sourceLang === 'ja' ? 'JP\u2192ID' : 'EN\u2192ID';
+    var typeLabel = project.projectType === 'vn' ? 'VN' : 'RPG';
+    var typeColor = project.projectType === 'vn' ? 'background:rgba(56,136,240,0.15);color:var(--color-info)' : 'background:rgba(24,200,112,0.15);color:var(--color-success)';
 
     return '<div class="project-card">' +
       '<div class="pc-header">' +
         '<i class="fas fa-file-lines pc-logo-icon"></i>' +
         '<span class="pc-name">' + escapeHtml(project.name) + '</span>' +
+        '<span class="lang-tag" style="' + typeColor + '">' + typeLabel + '</span>' +
         '<span class="lang-tag">' + langLabel + '</span>' +
       '</div>' +
       '<div class="pc-progress">' +
@@ -1952,6 +2035,7 @@ async function createNewProject() {
   if (!name) { showToast('Nama project wajib diisi', 'warning'); return; }
 
   var lang = getElement('createProjectLang').value;
+  var projectType = getElement('createProjectType').value;
   var fileInputs = getElement('createProjectFiles').files;
 
   if (!fileInputs || fileInputs.length === 0) {
@@ -2007,6 +2091,7 @@ for (var i = 0; i < fileInputs.length; i++) {
     id: generateId(),
     name: name,
     sourceLang: lang,
+    projectType: projectType,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     glossary: [],
@@ -2752,7 +2837,8 @@ async function startTranslation() {
   var batchSize = Math.max(5, Math.min(100, APP.settings.batchSize || 50));
   var currentDelay = Math.max(0, APP.settings.delay || 3);
   var lang = project.sourceLang || 'ja';
-  var prompt = APP.settings.customPrompt || DEFAULT_PROMPTS[lang] || DEFAULT_PROMPTS.ja;
+  var promptKey = (project.projectType || 'rpg') + '_' + lang;
+  var prompt = APP.settings.customPrompt || DEFAULT_PROMPTS[promptKey] || DEFAULT_PROMPTS['rpg_ja'];
   var model = APP.settings.model || 'gemini-3.6-flash';
   var glossary = project.glossary || [];
 
