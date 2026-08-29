@@ -2913,7 +2913,12 @@ function clearAllNameDict() {
 /* ============================================================
    SECTION 16: SEARCH & REPLACE
    ============================================================ */
+var _searchDebounce = null;
 function executeSearch() {
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(_executeSearch, 350);
+}   
+function _executeSearch() {
   var query = getElement('searchQueryInput').value.trim().toLowerCase();  
 if (query !== APP.lastSearchQuery) {
   APP.replaceExcludedIds.clear();
@@ -3034,7 +3039,7 @@ function replaceSingleMatch() {
   }
 
   APP.searchResultIndex = idx + 1;
-  executeSearch();
+  _executeSearch();
   renderEntriesTable();
 
   if (APP.searchResults.length === 0) {
@@ -3064,7 +3069,7 @@ function replaceAllMatches() {
 
   project.updatedAt = Date.now();
   saveProjects();
-  executeSearch();
+  _executeSearch();
   renderEntriesTable();
   showToast(count + ' penggantian dilakukan', 'success');
 }
