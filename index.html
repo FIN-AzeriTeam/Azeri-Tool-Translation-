@@ -459,6 +459,11 @@ select.form-input { cursor: pointer; }
   font-size: 0.8rem; 
   color: var(--text-secondary);
 }
+ .sidebar-add-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
+ }  
 
 /* File select bar (checkbox select all files) */
 .file-select-bar {
@@ -1152,8 +1157,12 @@ select.form-input { cursor: pointer; }
   <div class="editor-body">
     <!-- Sidebar: Daftar File -->
     <div class="editor-sidebar">
-      <div class="sidebar-title">
+     <div class="sidebar-title">
         <i class="fas fa-folder-open"></i> &nbsp;Files
+        <button class="btn-icon sidebar-add-btn" onclick="document.getElementById('addFileInput').click()" title="Tambah File" style="margin-left:auto">
+          <i class="fas fa-plus"></i>
+        </button>
+        <input type="file" id="addFileInput" accept=".json" multiple style="display:none" onchange="handleAddFiles(this.files)">
       </div>
       <div class="file-select-bar">
         <label>
@@ -2101,7 +2110,61 @@ async function exportTranslated() {
     }
   }
    }
+async function handleAddFiles(fileList) {
+  if (!fileList || fileList.length === 0) return;
 
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var newFiles = [];
+  var errors = [];
+
+  for (var i = 0; i < fileList.length; i++) {
+    try {
+      var text = await readFileAsText(fileList[i]);
+      var json = JSON.parse(text);
+      var foundNames = extractUniqueNames(json);
+      foundNames.forEach(function(n) {
+        if (!project.nameDict.some(function(d) { return d.source === n; })) {
+          project.nameDict.push({ source: n, target: '', isAuto: true });
+        }
+      });
+      var detected = detectJsonStructure(json);
+      if (detected) {
+        if (detected.files.length === 1) {
+          detected.files[0].name = fileList[i].name;
+        } else {
+          var baseName = fileList[i].name.replace(/\.json$/i, '');
+          detected.files.forEach(function(f) {
+            f.name = baseName + '_' + f.name;
+          });
+        }
+        newFiles = newFiles.concat(detected.files);
+      } else {
+        errors.push(fileList[i].name);
+      }
+    } catch (err) {
+      errors.push(fileList[i].name + ' (' + err.message + ')');
+    }
+  }
+
+  if (newFiles.length === 0) {
+    showToast('Tidak ada file berhasil diparse', 'error');
+    return;
+  }
+
+  project.files = project.files.concat(newFiles);
+  project.updatedAt = Date.now();
+  saveProjects();
+  renderFileList();
+
+  var totalLines = newFiles.reduce(function(sum, f) { return sum + f.entries.length; }, 0);
+  var msg = newFiles.length + ' file ditambahkan (' + totalLines + ' baris)';
+  if (errors.length > 0) msg += '. Gagal: ' + errors.join(', ');
+  showToast(msg, errors.length > 0 ? 'warning' : 'success');
+
+  document.getElementById('addFileInput').value = '';
+   }
 
 /* ============================================================
    SECTION 9: JSON STRUCTURE DETECTION
