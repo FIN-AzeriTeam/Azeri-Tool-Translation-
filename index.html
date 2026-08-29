@@ -1637,23 +1637,60 @@ var APP = {
    ============================================================ */
 var STORAGE_PROJECTS_KEY = 'rpgtrans_projects';
 var STORAGE_SETTINGS_KEY = 'rpgtrans_settings';
+var DB_NAME = 'rpgtrans_db';
+var DB_VERSION = 1;
+var DB_STORE = 'projects';
 
-function saveProjects() {
+function openDB() {
+  return new Promise(function(resolve, reject) {
+    var request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE);
+      }
+    };
+    request.onsuccess = function(e) { resolve(e.target.result); };
+    request.onerror = function(e) { reject(e.target.error); };
+  });
+}
+
+async function saveProjects() {
   try {
-    localStorage.setItem(STORAGE_PROJECTS_KEY, JSON.stringify(APP.projects));
+    var db = await openDB();
+    var tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(APP.projects, 'all_projects');
+    await new Promise(function(resolve, reject) {
+      tx.oncomplete = resolve;
+      tx.onerror = function() { reject(tx.error); };
+    });
   } catch (error) {
-    if (error.name === 'QuotaExceededError') {
-      showToast('Storage penuh! Backup & hapus project lama.', 'error');
-    } else {
-      showToast('Gagal menyimpan: ' + error.message, 'error');
-    }
+    showToast('Gagal menyimpan: ' + error.message, 'error');
   }
 }
 
-function loadProjects() {
+async function loadProjects() {
   try {
-    var data = localStorage.getItem(STORAGE_PROJECTS_KEY);
-    if (data) APP.projects = JSON.parse(data);
+    var db = await openDB();
+    var tx = db.transaction(DB_STORE, 'readonly');
+    var request = tx.objectStore(DB_STORE).get('all_projects');
+    var result = await new Promise(function(resolve) {
+      request.onsuccess = function() { resolve(request.result); };
+      request.onerror = function() { resolve(null); };
+    });
+
+    if (result) {
+      APP.projects = result;
+    } else {
+      var oldData = localStorage.getItem(STORAGE_PROJECTS_KEY);
+      if (oldData) {
+        try {
+          APP.projects = JSON.parse(oldData);
+          await saveProjects();
+          localStorage.removeItem(STORAGE_PROJECTS_KEY);
+        } catch (e) { /* ignore */ }
+      }
+    }
   } catch (e) {
     APP.projects = [];
   }
@@ -3177,9 +3214,9 @@ document.addEventListener('keydown', function(event) {
 /* ============================================================
    SECTION 19: INITIALIZATION
    ============================================================ */
-(function init() {
+(async function init() {
   loadSettings();
-  loadProjects();
+  await loadProjects();
   renderHomeProjects();
 })();
 </script>
