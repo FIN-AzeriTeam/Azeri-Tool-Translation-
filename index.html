@@ -1250,6 +1250,19 @@ select.form-input { cursor: pointer; }
     </select>
       <div class="form-hint">Flash = cepat & murah. Pro = akurat tapi lambat & boros quota.</div>
     </div>
+    <div class="divider"></div>
+    <div class="form-group">
+      <label class="form-label">Model Scan Glossary</label>
+      <select class="form-input" id="settingScanModel">
+        <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
+        <option value="gemini-3.6-flash">Gemini 3.6 Flash</option>
+        <option value="gemini-3.5-flash" selected>Gemini 3.5 Flash</option>
+        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite</option>
+        <option value="gemini-3.5-pro">Gemini 3.5 Pro</option>
+        <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+      </select>
+      <div class="form-hint">Model untuk scan glossary otomatis sebelum translate. Pakai yang ringan untuk hemat quota.</div>
+    </div>
     <div class="form-group">
       <label class="form-label">Batch Size (baris per request)</label>
       <input class="form-input" id="settingBatchSize" type="number" min="5" max="100" value="50">
@@ -1623,7 +1636,8 @@ var APP = {
   // Pengaturan AI (global, disimpan terpisah)
   settings: {
     apiKey: '',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.6-flash',
+    scanModel: 'gemini-3.5-flash',
     batchSize: 50,
     delay: 3,
     sourceLang: 'ja',
@@ -2572,6 +2586,78 @@ function onTranslationEdited(entryId, newValue) {
 /* ============================================================
    SECTION 14: TRANSLATION ENGINE (Multi-File Support)
    ============================================================ */
+async function autoExtractGlossary(allEntries, project) {
+  var lang = project.sourceLang || 'ja';
+  var scanModel = APP.settings.scanModel || 'gemini-3.5-flash';
+
+  if (!APP.settings.apiKey) return 0;
+
+  var allText = [];
+  allEntries.forEach(function(group) {
+    group.entries.forEach(function(e) {
+      var text = e.original;
+      if (e.originalName) text = '[' + e.originalName + '] ' + text;
+      allText.push(text);
+    });
+  });
+
+  var chunks = [];
+  for (var i = 0; i < allText.length; i += 1000) {
+    chunks.push(allText.slice(i, i + 1000).join('\n'));
+  }
+
+  var scanPrompt = '';
+  if (lang === 'ja') {
+    scanPrompt = '以下のRPG/ビジュアルノベルテキストから、特別な用語を特定してインドネシア語に翻訳してください。\n\n' +
+      '対象:\n- 場所名（都市、国、世界、エリア、ダンジョン）\n- スキル・魔法・必殺技の名前\n- アイテム名（武器、防具、消費アイテム）\n- 組織・ギルド・派閥の名前\n- ゲーム特有の用語\n- テキスト内に登場するキャラクター名\n\n' +
+      '除外:\n- 一般的な名詞、形容詞、動詞\n- 感嘆詞、接続詞\n\n' +
+      '出力形式（1行に1つ）:\n元の言葉 → 翻訳\n\n' +
+      '例:\n魔剣レーヴァテイン → Pedang Iblis Levantine\nガルド → Gald\nロゼ → Rozé\n\nTEKS:\n';
+  } else {
+    scanPrompt = 'From the following RPG/Visual Novel text, identify and translate to Indonesian these special terms:\n\n' +
+      'Include:\n- Place names (cities, worlds, areas, dungeons)\n- Skill/magic/ability names\n- Item names (weapons, armor, consumables)\n- Organization/guild/faction names\n- Game-specific terms\n- Character names that appear in the text\n\n' +
+      'Exclude:\n- Common nouns, adjectives, verbs\n- Exclamations, conjunctions\n\n' +
+      'Output format (one per line):\noriginal → translation\n\n' +
+      'Example:\nHoly Sword Excalibur → Pedang Suci Excalibur\nGald → Gald\nRose → Rozé\n\nTEXT:\n';
+  }
+
+  var totalAdded = 0;
+
+  for (var c = 0; c < chunks.length; c++) {
+    if (APP.translationCancelled) break;
+
+    addTranslateLog('Scan chunk ' + (c + 1) + '/' + chunks.length + '...', 'info');
+
+    try {
+      var result = await callGeminiAPI(scanPrompt + chunks[c], scanModel, APP.settings.apiKey);
+      var lines = result.split('\n').map(function(l) { return l.trim(); }).filter(function(l) {
+        return l.indexOf('→') !== -1;
+      });
+
+      lines.forEach(function(line) {
+        var parts = line.split('→');
+        if (parts.length >= 2) {
+          var source = parts[0].trim();
+          var target = parts.slice(1).join('→').trim();
+          if (!source || !target || target.length > 100) return;
+          if (project.glossary.some(function(g) { return g.source === source; })) return;
+          project.glossary.push({ source: source, target: target, isAuto: true });
+          totalAdded++;
+          addTranslateLog('Glossary+: ' + source + ' → ' + target, 'success');
+        }
+      });
+
+      if (c + 1 < chunks.length) await sleep(3000);
+
+    } catch (error) {
+      addTranslateLog('Scan error chunk ' + (c + 1) + ': ' + error.message, 'error');
+    }
+  }
+
+  if (totalAdded > 0) saveProjects();
+  return totalAdded;
+}
+   
 async function startTranslation() {
   if (APP.isTranslating) { showToast('Translasi sedang berjalan', 'warning'); return; }
   if (!APP.settings.apiKey) {
@@ -2637,8 +2723,31 @@ async function startTranslation() {
   if (willOverwrite > 0 && !confirm(willOverwrite + ' baris yang sudah kamu edit manual akan ditimpa. Lanjutkan?')) return;
 
   // Hitung total entri
+    // Hitung total entri
   var totalEntries = 0;
   allEntries.forEach(function(f) { totalEntries += f.entries.length; });
+
+  APP.isTranslating = true;
+  APP.translationCancelled = false;
+
+  // Setup modal (dibuka awal biar bisa lihat progress scan)
+  getElement('translateTotal').textContent = totalEntries;
+  getElement('translateDone').textContent = '0';
+  getElement('translateBatch').textContent = '0';
+  getElement('translateDelay').textContent = '0';
+  getElement('translatePercent').textContent = '0%';
+  getElement('translateBarFill').style.width = '0%';
+  getElement('translateFileTotal').textContent = allEntries.length;
+  getElement('translateFileNum').textContent = '0';
+  getElement('translateLog').innerHTML = '';
+  openModal('translateModal');
+
+  // Tahap 1: Auto-extract glossary
+  addTranslateLog('Tahap 1: Scan glossary otomatis...', 'info');
+  var glossaryAdded = await autoExtractGlossary(allEntries, project);
+  addTranslateLog(glossaryAdded + ' kata baru ditambahkan', glossaryAdded > 0 ? 'success' : 'info');
+  addTranslateLog('Tahap 2: Memulai terjemahan...', 'info');
+  addTranslateLog('---', 'info');
 
   var batchSize = Math.max(5, Math.min(100, APP.settings.batchSize || 50));
   var currentDelay = Math.max(0, APP.settings.delay || 3);
@@ -2646,21 +2755,6 @@ async function startTranslation() {
   var prompt = APP.settings.customPrompt || DEFAULT_PROMPTS[lang] || DEFAULT_PROMPTS.ja;
   var model = APP.settings.model || 'gemini-3.6-flash';
   var glossary = project.glossary || [];
-
-  APP.isTranslating = true;
-  APP.translationCancelled = false;
-
-  // Setup modal
-  getElement('translateTotal').textContent = totalEntries;
-  getElement('translateDone').textContent = '0';
-  getElement('translateBatch').textContent = '0';
-  getElement('translateDelay').textContent = currentDelay;
-  getElement('translatePercent').textContent = '0%';
-  getElement('translateBarFill').style.width = '0%';
-  getElement('translateFileTotal').textContent = allEntries.length;
-  getElement('translateFileNum').textContent = '0';
-  getElement('translateLog').innerHTML = '';
-  openModal('translateModal');
 
   addTranslateLog('Model: ' + model, 'info');
   addTranslateLog('Batch size: ' + batchSize, 'info');
@@ -2875,7 +2969,7 @@ function renderGlossaryList() {
 
     container.innerHTML = project.glossary.map(function(item, index) {
     return '<div class="glossary-item">' +
-      '<span class="glossary-source">' + escapeHtml(item.source) + '</span>' +
+      '<span class="glossary-source">' + escapeHtml(item.source) + (item.isAuto ? ' <span style="font-size:0.6rem;padding:1px 5px;border-radius:3px;background:rgba(56,136,240,0.15);color:var(--color-info)">auto</span>' : '') + '</span>' +
       '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
       '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
       '<button class="btn-icon" onclick="removeGlossaryEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
@@ -3167,7 +3261,8 @@ function replaceAllMatches() {
    ============================================================ */
 function populateSettingsPanel() {
   getElement('settingApiKey').value = APP.settings.apiKey || '';
-  getElement('settingModel').value = APP.settings.model || 'gemini-1.5-flash';
+  getElement('settingModel').value = APP.settings.model || 'gemini-3.6-flash';
+  getElement('settingScanModel').value = APP.settings.scanModel || 'gemini-3.5-flash';
   getElement('settingBatchSize').value = APP.settings.batchSize || 50;
   getElement('settingDelay').value = APP.settings.delay || 3;
   getElement('settingLang').value = APP.settings.sourceLang || 'ja';
@@ -3177,6 +3272,7 @@ function populateSettingsPanel() {
 function saveSettings() {
   APP.settings.apiKey = getElement('settingApiKey').value.trim();
   APP.settings.model = getElement('settingModel').value;
+  APP.settings.scanModel = getElement('settingScanModel').value;
   APP.settings.batchSize = parseInt(getElement('settingBatchSize').value) || 50;
   APP.settings.delay = parseInt(getElement('settingDelay').value) || 3;
   APP.settings.sourceLang = getElement('settingLang').value;
