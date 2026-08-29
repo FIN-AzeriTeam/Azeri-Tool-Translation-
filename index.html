@@ -143,7 +143,9 @@ input, select, textarea, button {
   color: var(--text-primary);
   border-color: var(--border-hover);
 }
-
+.sidebar-toggle {
+  display: none;
+   }
 /* ==========================================
    FORM ELEMENTS
    ========================================== */
@@ -683,24 +685,6 @@ select.form-input { cursor: pointer; }
 .col-status .fa-pen { color: var(--accent); font-size: 0.6rem; }
 
 /* ==========================================
-   PAGINATION
-   ========================================== */
-.table-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  flex-shrink: 0;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-.table-pager .btn-icon { width: 30px; height: 30px; font-size: 0.7rem; }
-.table-pager .btn-icon:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
-
-/* ==========================================
    SIDE PANELS
    ========================================== */
 .panel-backdrop {
@@ -1220,8 +1204,6 @@ select.form-input { cursor: pointer; }
           <tbody id="entriesTableBody"></tbody>
         </table>
       </div>
-
-      <div class="table-pager" id="tablePager"></div>
     </div>
   </div>
 </div>
