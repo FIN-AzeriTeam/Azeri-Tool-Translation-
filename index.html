@@ -1196,6 +1196,9 @@ select.form-input { cursor: pointer; }
         <button class="btn-icon" id="pagerPrev" onclick="goToPage(APP.currentPage-1)" disabled><i class="fas fa-chevron-left"></i></button>
         <button class="btn-icon" id="pagerNext" onclick="goToPage(APP.currentPage+1)" disabled><i class="fas fa-chevron-right"></i></button>
         <div class="toolbar-spacer"></div>
+        <button class="btn btn-small btn-secondary" onclick="scanGlossaryOnly()">
+          <i class="fas fa-book"></i> Scan
+        </button>
         <button class="btn btn-small btn-primary" onclick="startTranslation()">
           <i class="fas fa-language"></i> Translate
         </button>
@@ -2741,7 +2744,68 @@ async function autoExtractGlossary(allEntries, project) {
   if (totalAdded > 0) saveProjects();
   return totalAdded;
 }
-   
+
+async function scanGlossaryOnly() {
+  if (APP.isTranslating) { showToast('Sedang berjalan', 'warning'); return; }
+  if (!APP.settings.apiKey) {
+    showToast('API Key belum diisi! Buka Pengaturan AI.', 'warning');
+    openSidePanel('settingsPanel');
+    return;
+  }
+
+  var project = getCurrentProject();
+  if (!project) return;
+
+  var filesToScan = [];
+  if (APP.selectedFileIndices.size > 0) {
+    APP.selectedFileIndices.forEach(function(idx) {
+      if (project.files[idx]) filesToScan.push({ file: project.files[idx], index: idx });
+    });
+  } else {
+    filesToScan.push({ file: project.files[APP.currentFileIndex], index: APP.currentFileIndex });
+  }
+
+  var allEntries = [];
+  filesToScan.forEach(function(fp) {
+    var entries = APP.selectedEntryIds.size > 0
+      ? fp.file.entries.filter(function(e) { return APP.selectedEntryIds.has(e.id); })
+      : fp.file.entries;
+    if (entries.length > 0) {
+      allEntries.push({ file: fp.file, fileIndex: fp.index, entries: entries });
+    }
+  });
+
+  var totalEntries = 0;
+  allEntries.forEach(function(f) { totalEntries += f.entries.length; });
+  if (totalEntries === 0) { showToast('Tidak ada baris untuk di-scan', 'warning'); return; }
+
+  APP.isTranslating = true;
+  APP.translationCancelled = false;
+
+  getElement('translateTotal').textContent = totalEntries;
+  getElement('translateDone').textContent = '0';
+  getElement('translateBatch').textContent = '0';
+  getElement('translateDelay').textContent = '0';
+  getElement('translatePercent').textContent = '0%';
+  getElement('translateBarFill').style.width = '0%';
+  getElement('translateFileTotal').textContent = allEntries.length;
+  getElement('translateFileNum').textContent = '0';
+  getElement('translateLog').innerHTML = '';
+  openModal('translateModal');
+
+  addTranslateLog('Scan glossary: ' + totalEntries + ' baris di ' + allEntries.length + ' file', 'info');
+  addTranslateLog('---', 'info');
+
+  var added = await autoExtractGlossary(allEntries, project);
+
+  addTranslateLog('---', 'info');
+  addTranslateLog('Selesai! ' + added + ' kata baru', added > 0 ? 'success' : 'info');
+
+  APP.isTranslating = false;
+  setTimeout(function() { closeModal('translateModal'); }, 1000);
+  showToast(added + ' kata baru ditambahkan ke glossary', added > 0 ? 'success' : 'info');
+   }
+
 async function startTranslation() {
   if (APP.isTranslating) { showToast('Translasi sedang berjalan', 'warning'); return; }
   if (!APP.settings.apiKey) {
@@ -2806,32 +2870,9 @@ async function startTranslation() {
   });
   if (willOverwrite > 0 && !confirm(willOverwrite + ' baris yang sudah kamu edit manual akan ditimpa. Lanjutkan?')) return;
 
-  // Hitung total entri
     // Hitung total entri
   var totalEntries = 0;
   allEntries.forEach(function(f) { totalEntries += f.entries.length; });
-
-  APP.isTranslating = true;
-  APP.translationCancelled = false;
-
-  // Setup modal (dibuka awal biar bisa lihat progress scan)
-  getElement('translateTotal').textContent = totalEntries;
-  getElement('translateDone').textContent = '0';
-  getElement('translateBatch').textContent = '0';
-  getElement('translateDelay').textContent = '0';
-  getElement('translatePercent').textContent = '0%';
-  getElement('translateBarFill').style.width = '0%';
-  getElement('translateFileTotal').textContent = allEntries.length;
-  getElement('translateFileNum').textContent = '0';
-  getElement('translateLog').innerHTML = '';
-  openModal('translateModal');
-
-  // Tahap 1: Auto-extract glossary
-  addTranslateLog('Tahap 1: Scan glossary otomatis...', 'info');
-  var glossaryAdded = await autoExtractGlossary(allEntries, project);
-  addTranslateLog(glossaryAdded + ' kata baru ditambahkan', glossaryAdded > 0 ? 'success' : 'info');
-  addTranslateLog('Tahap 2: Memulai terjemahan...', 'info');
-  addTranslateLog('---', 'info');
 
   var batchSize = Math.max(5, Math.min(100, APP.settings.batchSize || 50));
   var currentDelay = Math.max(0, APP.settings.delay || 3);
@@ -2841,12 +2882,27 @@ async function startTranslation() {
   var model = APP.settings.model || 'gemini-3.6-flash';
   var glossary = project.glossary || [];
 
+  APP.isTranslating = true;
+  APP.translationCancelled = false;
+
+  // Setup modal
+  getElement('translateTotal').textContent = totalEntries;
+  getElement('translateDone').textContent = '0';
+  getElement('translateBatch').textContent = '0';
+  getElement('translateDelay').textContent = currentDelay;
+  getElement('translatePercent').textContent = '0%';
+  getElement('translateBarFill').style.width = '0%';
+  getElement('translateFileTotal').textContent = allEntries.length;
+  getElement('translateFileNum').textContent = '0';
+  getElement('translateLog').innerHTML = '';
+  openModal('translateModal');
+
   addTranslateLog('Model: ' + model, 'info');
   addTranslateLog('Batch size: ' + batchSize, 'info');
   addTranslateLog('Delay: ' + currentDelay + ' detik', 'info');
   addTranslateLog('Total: ' + totalEntries + ' baris di ' + allEntries.length + ' file', 'info');
   addTranslateLog('---', 'info');
-
+   
   var processedCount = 0;
   var batchNumber = 0;
 
