@@ -869,22 +869,24 @@ select.form-input { cursor: pointer; }
 
 .glossary-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   padding: 10px 12px;
   background: var(--bg-card-solid);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   font-size: 0.82rem;
   transition: border-color var(--transition-speed);
+  position: relative;
 }
 .glossary-item:hover { border-color: var(--border-hover); }
 
-.glossary-source { flex: 1; color: var(--text-secondary); word-break: break-word; }
-.glossary-arrow { color: var(--text-muted); font-size: 0.65rem; flex-shrink: 0; }
-.glossary-target { flex: 1; color: var(--accent); font-weight: 600; word-break: break-word; }
-.glossary-item .btn-icon { width: 28px; height: 28px; font-size: 0.65rem; flex-shrink: 0; }
-
+.glossary-source { color: var(--text-secondary); word-break: break-word; padding-right: 36px; }
+.glossary-arrow { display: none; }
+.glossary-target { color: var(--accent); font-weight: 600; word-break: break-word; }
+.glossary-item .btn-icon { position: absolute; top: 10px; right: 8px; width: 28px; height: 28px; font-size: 0.65rem; }
+   
 /* ==========================================
    SEARCH RESULTS
    ========================================== */
@@ -1343,20 +1345,28 @@ select.form-input { cursor: pointer; }
   </div>
   <div class="panel-body">
     <div class="form-group">
-      <label class="form-label">Cari di Hasil Terjemahan</label>
-      <input class="form-input" id="searchQueryInput" placeholder="Kata atau kalimat..." oninput="executeSearch()">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Ganti Dengan</label>
-      <input class="form-input" id="replaceQueryInput" placeholder="Teks pengganti...">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Scope</label>
-      <select class="form-input" id="searchScopeSelect">
-        <option value="file">File Ini Saja</option>
-        <option value="all">Semua File</option>
-      </select>
-    </div>
+  <label class="form-label">Cari</label>
+  <input class="form-input" id="searchQueryInput" placeholder="Kata atau kalimat..." oninput="executeSearch()">
+</div>
+<div class="form-group">
+  <label class="form-label">Cari Di</label>
+  <select class="form-input" id="searchTargetSelect" onchange="executeSearch()">
+    <option value="translated">Hasil Terjemahan (cari & ganti)</option>
+    <option value="original">Teks Asli (cari saja)</option>
+    <option value="both">Keduanya</option>
+  </select>
+</div>
+<div class="form-group">
+  <label class="form-label">Ganti Dengan</label>
+  <input class="form-input" id="replaceQueryInput" placeholder="Teks pengganti...">
+</div>
+<div class="form-group">
+  <label class="form-label">Scope</label>
+  <select class="form-input" id="searchScopeSelect">
+    <option value="file">File Ini Saja</option>
+    <option value="all">Semua File</option>
+  </select>
+</div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <button class="btn btn-primary" onclick="replaceSingleMatch()" style="flex:1">
         <i class="fas fa-exchange-alt"></i> Ganti Satu
@@ -3249,16 +3259,19 @@ function executeSearch() {
   _searchDebounce = setTimeout(_executeSearch, 350);
 }   
 function _executeSearch() {
-  var query = getElement('searchQueryInput').value.trim().toLowerCase();  
-if (query !== APP.lastSearchQuery) {
-  APP.replaceExcludedIds.clear();
-  APP.lastSearchQuery = query;
-}
+  var query = getElement('searchQueryInput').value.trim().toLowerCase();
+
+  if (query !== APP.lastSearchQuery) {
+    APP.replaceExcludedIds.clear();
+    APP.lastSearchQuery = query;
+  }
+
   var scope = getElement('searchScopeSelect').value;
+  var searchTarget = getElement('searchTargetSelect').value;
   var results = [];
 
   if (!query) {
-    APP.searchResults = [];
+    APP.searchResults = results;
     APP.searchResultIndex = -1;
     getElement('searchResultCountText').textContent = '0';
     getElement('searchResultsContainer').innerHTML = '';
@@ -3273,14 +3286,32 @@ if (query !== APP.lastSearchQuery) {
 
   filesToSearch.forEach(function(file, fileIndex) {
     file.entries.forEach(function(entry, entryIndex) {
-      if (entry.translated && entry.translated.toLowerCase().indexOf(query) !== -1) {
+      var matchOriginal = entry.original && entry.original.toLowerCase().indexOf(query) !== -1;
+      var matchTranslated = entry.translated && entry.translated.toLowerCase().indexOf(query) !== -1;
+
+      var shouldInclude = false;
+      var matchField = '';
+
+      if (searchTarget === 'original' && matchOriginal) {
+        shouldInclude = true;
+        matchField = 'original';
+      } else if (searchTarget === 'translated' && matchTranslated) {
+        shouldInclude = true;
+        matchField = 'translated';
+      } else if (searchTarget === 'both' && (matchOriginal || matchTranslated)) {
+        shouldInclude = true;
+        matchField = matchTranslated ? 'translated' : 'original';
+      }
+
+      if (shouldInclude) {
         results.push({
           fileIndex: fileIndex,
           fileName: file.name,
           entryId: entry.id,
           entryIndex: entryIndex,
           original: entry.original,
-          translated: entry.translated
+          translated: entry.translated,
+          matchField: matchField
         });
       }
     });
@@ -3301,11 +3332,23 @@ if (query !== APP.lastSearchQuery) {
   }
 
   container.innerHTML = results.map(function(r, index) {
-    var highlighted = escapeHtml(r.translated).replace(new RegExp('(' + escapeRegex(query) + ')', 'gi'), '<mark>$1</mark>');
+    var isOrig = r.matchField === 'original';
+    var highlightText = isOrig
+      ? escapeHtml(r.original)
+      : escapeHtml(r.translated);
+    highlightText = highlightText.replace(new RegExp('(' + escapeRegex(query) + ')', 'gi'), '<mark>$1</mark>');
+
+    var fieldLabel = searchTarget === 'both'
+      ? '<div style="font-size:0.62rem;color:var(--text-muted);margin-bottom:2px">' + (isOrig ? 'Teks Asli' : 'Terjemahan') + '</div>'
+      : '';
+
+    var previewText = isOrig ? r.original : r.translated;
     var fileLabel = r.fileName !== currentFileName ? '<div class="sr-file"><i class="fas fa-file-code"></i> ' + escapeHtml(r.fileName) + '</div>' : '';
+
     return '<div class="search-result-item" onclick="jumpToSearchResult(' + index + ')">' +
-      '<div class="sr-original">' + escapeHtml(r.original).substring(0, 80) + (r.original.length > 80 ? '...' : '') + '</div>' +
-      '<div class="sr-translated">' + highlighted + '</div>' +
+      fieldLabel +
+      '<div class="sr-translated">' + highlightText + '</div>' +
+      '<div class="sr-original" style="opacity:0.5">' + escapeHtml(r.original).substring(0, 80) + (r.original.length > 80 ? '...' : '') + '</div>' +
       fileLabel +
     '</div>';
   }).join('');
@@ -3325,19 +3368,34 @@ function jumpToSearchResult(index) {
   renderEntriesTable();
 
   setTimeout(function() {
-    document.querySelectorAll('#entriesTableBody .col-translated input').forEach(function(inp) {
-      var numCell = inp.closest('tr').querySelector('.col-num');
-      if (numCell && numCell.textContent == result.entryIndex + 1) {
-        inp.style.background = 'rgba(232, 152, 48, 0.15)';
-        inp.focus();
-        inp.select();
-        setTimeout(function() { inp.style.background = ''; }, 2500);
+    var rows = document.querySelectorAll('#entriesTableBody tr');
+    rows.forEach(function(row) {
+      var numCell = row.querySelector('.col-num');
+      if (numCell && parseInt(numCell.textContent) === result.entryIndex + 1) {
+        var targetCell;
+        if (result.matchField === 'original') {
+          targetCell = row.querySelector('.col-original');
+        } else {
+          targetCell = row.querySelector('.col-translated textarea');
+        }
+        if (targetCell) {
+          targetCell.style.background = 'rgba(232, 152, 48, 0.15)';
+          if (result.matchField === 'translated') {
+            targetCell.focus();
+            targetCell.select();
+          }
+          setTimeout(function() { targetCell.style.background = ''; }, 2500);
+        }
       }
     });
   }, 60);
 }
 
 function replaceSingleMatch() {
+  if (getElement('searchTargetSelect').value === 'original') {
+    showToast('Teks asli tidak bisa diganti', 'warning');
+    return;
+  }
   if (APP.searchResults.length === 0) { showToast('Lakukan pencarian dulu', 'warning'); return; }
   var query = getElement('searchQueryInput').value.trim();
   var replacement = getElement('replaceQueryInput').value;
@@ -3378,6 +3436,10 @@ function replaceSingleMatch() {
 }
 
 function replaceAllMatches() {
+  if (getElement('searchTargetSelect').value === 'original') {
+    showToast('Teks asli tidak bisa diganti', 'warning');
+    return;
+  }
   if (APP.searchResults.length === 0) { showToast('Lakukan pencarian dulu', 'warning'); return; }
   var query = getElement('searchQueryInput').value.trim();
   var replacement = getElement('replaceQueryInput').value;
