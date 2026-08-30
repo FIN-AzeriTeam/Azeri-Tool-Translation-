@@ -3112,7 +3112,7 @@ function renderGlossaryList() {
     return '<div class="glossary-item">' +
       '<span class="glossary-source">' + escapeHtml(item.source) + (item.isAuto ? ' <span style="font-size:0.6rem;padding:1px 5px;border-radius:3px;background:rgba(56,136,240,0.15);color:var(--color-info)">auto</span>' : '') + '</span>' +
       '<span class="glossary-arrow"><i class="fas fa-arrow-right"></i></span>' +
-      '<span class="glossary-target">' + escapeHtml(item.target) + '</span>' +
+      '<input class="name-dict-input" type="text" value="' + escapeAttribute(item.target) + '" placeholder="Terjemahan..." onchange="editGlossaryTarget(' + index + ', this.value)">' +
       '<button class="btn-icon" onclick="removeGlossaryEntry(' + index + ')" title="Hapus"><i class="fas fa-times"></i></button>' +
     '</div>';
   }).join('');
@@ -3145,6 +3145,14 @@ function removeGlossaryEntry(index) {
   project.updatedAt = Date.now();
   saveProjects();
   renderGlossaryList();
+}
+
+function editGlossaryTarget(index, newValue) {
+  var project = getCurrentProject();
+  if (!project) return;
+  project.glossary[index].target = newValue.trim();
+  project.updatedAt = Date.now();
+  saveProjects();
 }
 
 function clearAllGlossary() {
