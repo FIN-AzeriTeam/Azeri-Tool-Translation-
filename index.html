@@ -2699,8 +2699,8 @@ async function autoExtractGlossary(allEntries, project) {
   });
 
   var chunks = [];
-  for (var i = 0; i < allText.length; i += 1000) {
-    chunks.push(allText.slice(i, i + 1000).join('\n'));
+  for (var i = 0; i < allText.length; i += 500) {
+    chunks.push(allText.slice(i, i + 500).join('\n'));
   }
 
   var scanPrompt = '';
@@ -2744,10 +2744,20 @@ async function autoExtractGlossary(allEntries, project) {
         }
       });
 
-      if (c + 1 < chunks.length) await sleep(3000);
+            if (c + 1 < chunks.length) {
+        var scanDelay = Math.max(3, APP.settings.delay || 3);
+        await sleep(scanDelay * 1000);
+      }
 
     } catch (error) {
       addTranslateLog('Scan error chunk ' + (c + 1) + ': ' + error.message, 'error');
+
+      if (error.message.indexOf('429') !== -1 || error.message.indexOf('quota') !== -1) {
+        addTranslateLog('Rate limited, menunggu 10 detik...', 'error');
+        await sleep(10000);
+        c -= 1;
+        continue;
+      }
     }
   }
 
@@ -2940,12 +2950,18 @@ async function startTranslation() {
         return (idx + 1) + '. ' + prefix + entry.original;
       }).join('\n');
 
-      // Bangun glossary section
+    // Bangun glossary section — hanya kata yang muncul di batch ini
       var glossarySection = '';
       if (glossary.length > 0) {
-        glossarySection = '\n[GLOSSARY]\n' +
-          glossary.map(function(g) { return g.source + ' \u2192 ' + g.target; }).join('\n') +
-          '\nWAJIB gunakan glossary di atas sebagai referensi utama.\n';
+        var relevantGlossary = glossary.filter(function(g) {
+          return textBlock.toLowerCase().indexOf(g.source.toLowerCase()) !== -1;
+        });
+      if (relevantGlossary.length > 0) {
+          glossarySection = '\n[GLOSSARY]\n' +
+            relevantGlossary.map(function(g) { return g.source + ' \u2192 ' + g.target; }).join('\n') +
+            '\nWAJIB gunakan glossary di atas sebagai referensi utama.\n';
+          addTranslateLog('Glossary: ' + relevantGlossary.map(function(g) { return g.source; }).join(', '), 'info');
+        }
       }
        // Bangun kamus nama karakter section
       var nameDict = project.nameDict || [];
