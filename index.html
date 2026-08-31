@@ -1609,7 +1609,7 @@ var DEFAULT_PROMPTS = {
     '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong", "kan"\n' +
     '- Sesuaikan karakter: anak muda lebih santai, dewasa lebih sopan\n' +
     '- Buat dialog terasa hidup, bukan seperti terjemahan mesin\n' +
-    '- Kata ganti: pakai "Aku" (bukan "Saya"), pakai "Kamu" (bukan "Anda")\n' +
+    '- Kata ganti: Pakai "Aku" (bukan "Saya"), pakai "Kamu" (bukan "Anda")\n' +
     '- DILARANG KERAS: "Gw", "gue", "elu", "Lo"\n\n' +
     '[ATURAN MONOLOG/NARASI]\n' +
     '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
@@ -1643,7 +1643,9 @@ var DEFAULT_PROMPTS = {
     '- Boleh sedikit lebih pendek atau panjang, tapi JANGAN drastis berbeda\n\n' +
     '[ATURAN DIALOG]\n' +
     '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong"\n' +
-    '- Jangan terlalu formal di dialog\n\n' +
+    '- Jangan terlalu formal di dialog\n' +
+    '- Kata ganti: Pakai "Aku" (bukan "Saya"), pakai "Kamu" (bukan "Anda")\n' +
+    '- DILARANG KERAS: "Gw", "gue", "elu", "Lo"\n\n' +
     '[ATURAN MONOLOG/NARASI]\n' +
     '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
     '- Lebih deskriptif dan mengalir\n\n' +
@@ -1672,7 +1674,9 @@ var DEFAULT_PROMPTS = {
     '[ATURAN DIALOG]\n' +
     '- Gunakan bahasa sehari-hari: "nggak", "gak", "kok", "sih", "dong"\n' +
     '- Buat dialog terasa hidup, bukan seperti terjemahan mesin\n' +
-    '- Idiom dan ekspresi: adaptasi ke Indonesia, BUKAN terjemahan literal\n\n' +
+    '- Idiom dan ekspresi: adaptasi ke Indonesia, BUKAN terjemahan literal\n' +
+    '- Kata ganti: Pakai "Aku" (bukan "Saya"), pakai "Kamu" (bukan "Anda")\n' +
+    '- DILARANG KERAS: "Gw", "gue", "elu", "Lo"\n\n' +
     '[ATURAN MONOLOG/NARASI]\n' +
     '- Gunakan bahasa lebih baku: "tidak" bukan "nggak"\n' +
     '- Lebih deskriptif dan mengalir, tapi jangan kaku\n\n' +
@@ -1692,8 +1696,7 @@ var DEFAULT_PROMPTS = {
     '4. Yes / No → Ya / Tidak\n\n' +
     'Berikan HASIL SAJA dalam format:\n1. terjemahan\n2. terjemahan\n...'
 };
-
-
+  
 /* ============================================================
    SECTION 2: APPLICATION STATE
    ============================================================ */
