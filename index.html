@@ -2216,9 +2216,15 @@ function rebuildJson(file, nameDict) {
       }
     }
 
+    var message = entry.translated || entry.original;
+    // Safety: hapus sisa [Nama] yang mungkin masih tersimpan di data lama
+    if (entry.originalName) {
+      message = message.replace(/^\[.*?\]\s*/, '');
+    }
+
     return {
       name: finalName,
-      message: entry.translated || entry.original
+      message: message
     };
   });
 }
@@ -2993,14 +2999,18 @@ async function startTranslation() {
             addTranslateLog('Format nomor tidak terdeteksi, menggunakan parse baris langsung', 'info');
           }
           }
-        batch.forEach(function(entry, idx) {
-          if (resultLines[idx]) {
-            var translated = resultLines[idx].replace(/^\d+[\.\)]\s*/, '').trim();
-            var targetEntry = fileData.file.entries.find(function(e) { return e.id === entry.id; });
-            if (targetEntry) {
-              targetEntry.translated = translated;
-              targetEntry.status = 'translated';
-            }
+         batch.forEach(function(entry, idx) {
+        if (resultLines[idx]) {
+          var translated = resultLines[idx].replace(/^\d+[\.\)]\s*/, '').trim();
+          // Hapus prefix [Nama] dari hasil translate jika entry punya originalName
+          if (entry.originalName) {
+            translated = translated.replace(/^\[.*?\]\s*/, '');
+          }
+          var targetEntry = fileData.file.entries.find(function(e) { return e.id === entry.id; });
+          if (targetEntry) {
+            targetEntry.translated = translated;
+            targetEntry.status = 'translated';
+          }
           } else {
             addTranslateLog('Baris ' + (i + idx + 1) + ': tidak ada hasil', 'error');
           }
