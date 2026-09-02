@@ -2204,31 +2204,45 @@ function restoreFromBackup() {
 }
 /* Fungsi untuk merakit ulang JSON (Sudah support ganti nama karakter) */
 function rebuildJson(file, nameDict) {
-  var isObjectArray = file.entries.length > 0 && file.entries[0].originalName;
-  
-    if (isObjectArray) {
-    return file.entries.map(function(entry) {
-      var obj = {};
-      
-      if (entry.originalName) {
-        var finalName = entry.originalName;
-        var dictMatch = nameDict.find(function(d) { return d.source === entry.originalName; });
-        if (dictMatch && dictMatch.target.trim() !== '') {
-          finalName = dictMatch.target; 
+  var results = [];
+  var currentGroup = null;
+
+  file.entries.forEach(function(entry, index) {
+    var name = entry.originalName !== undefined ? entry.originalName : '';
+
+    if (name !== '' && currentGroup && currentGroup.name === name) {
+      var translated = entry.translated || entry.original;
+      if (translated && entry.original) {
+        var transLines = translated.split('\n');
+        var origLines = entry.original.split('\n');
+
+        if (transLines.length <= origLines.length) {
+          currentGroup.messages.push(transLines);
+        } else {
+          var filtered = transLines.filter(function(line) {
+            return origLines.some(function(origLine) { return line.indexOf(origLine) !== -1; });
+          if (filtered.length > 0) {
+            currentGroup.messages.push(filtered.join('\n'));
+          } else {
+            currentGroup.messages.push(transLines.slice(0, origLines.length).join('\n'));
+          }
         }
-        obj.name = finalName;
+      } else {
+        currentGroup.messages.push(translated || entry.original);
       }
-      
-      obj.message = entry.translated || entry.original;
-      
-      return obj;
-    });
-  } else {
-    return file.entries.map(function(entry) {
-      return entry.translated || entry.original;
-    });
-  }
-   }
+    } else {
+      if (currentGroup) results.push(currentGroup);
+      currentGroup = {
+        name: name,
+        messages: [entry.translated || entry.original]
+      };
+    }
+  });
+
+  if (currentGroup) results.push(currentGroup);
+
+  return results;
+}
 async function exportTranslated() {
   var project = getCurrentProject();
   if (!project) return;
