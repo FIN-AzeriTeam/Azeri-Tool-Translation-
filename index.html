@@ -2204,6 +2204,49 @@ function restoreFromBackup() {
 }
 /* Fungsi untuk merakit ulang JSON — Selalu format {name, message} */
 function rebuildJson(file, nameDict) {
+  function normalize(s) {
+    return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
+  function stripNamePrefix(message, originalName) {
+    if (!originalName) return message;
+
+    // 1. Exact match
+    var sentPrefix = '[' + originalName + '] ';
+    if (message.indexOf(sentPrefix) === 0) return message.substring(sentPrefix.length);
+
+    // 2. Cek versi nama dari kamus
+    for (var i = 0; i < nameDict.length; i++) {
+      if (nameDict[i].source === originalName && nameDict[i].target.trim()) {
+        var altPrefix = '[' + nameDict[i].target + '] ';
+        if (message.indexOf(altPrefix) === 0) return message.substring(altPrefix.length);
+      }
+    }
+
+    // 3. Normalized match — Roze vs Rozé, dll
+    if (message.charAt(0) === '[') {
+      var closeIdx = message.indexOf(']');
+      if (closeIdx > 0) {
+        var inside = normalize(message.substring(1, closeIdx));
+        if (inside === normalize(originalName)) {
+          return message.substring(closeIdx + 1).replace(/^\s+/, '');
+        }
+        for (var j = 0; j < nameDict.length; j++) {
+          if (normalize(nameDict[j].target) === inside) {
+            return message.substring(closeIdx + 1).replace(/^\s+/, '');
+          }
+        }
+      }
+    }
+
+    // 4. Sisa ] dari nama yang mengandung bracket (\v[117], dll)
+    if (originalName.indexOf(']') !== -1 && message.charAt(0) === ']') {
+      return message.substring(1).replace(/^\s+/, '');
+    }
+
+    return message;
+  }
+
   return file.entries.map(function(entry) {
     var finalName = '';
 
@@ -2217,34 +2260,7 @@ function rebuildJson(file, nameDict) {
     }
 
     var message = entry.translated || entry.original;
-
-    // Bersihkan sisa prefix [Nama] dari data lama
-    if (entry.originalName) {
-      var sentPrefix = '[' + entry.originalName + '] ';
-      
-      if (message.indexOf(sentPrefix) === 0) {
-        // Kasus 1: prefix exact match (nama normal seperti [Roze])
-        message = message.substring(sentPrefix.length);
-      } else {
-        // Kasus 2: cek versi nama dari kamus (Roze vs Rozé, dll)
-        var cleaned = false;
-        nameDict.forEach(function(d) {
-          if (!cleaned && d.source === entry.originalName && d.target.trim()) {
-            var altPrefix = '[' + d.target + '] ';
-            if (message.indexOf(altPrefix) === 0) {
-              message = message.substring(altPrefix.length);
-              cleaned = true;
-            }
-          }
-        });
-        
-        // Kasus 3: nama mengandung ] (\v[117], \n[1], dll)
-        // prefix-nya gagal di-strip, tapi ] penutupnya masih nempel di awal
-        if (!cleaned && entry.originalName.indexOf(']') !== -1 && message.charAt(0) === ']') {
-          message = message.substring(1).replace(/^\s+/, '');
-        }
-      }
-    }
+    message = stripNamePrefix(message, entry.originalName);
 
     return {
       name: finalName,
