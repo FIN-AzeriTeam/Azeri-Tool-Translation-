@@ -2218,20 +2218,31 @@ function rebuildJson(file, nameDict) {
 
     var message = entry.translated || entry.original;
 
-    // Safety: hapus sisa prefix [Nama] dari data lama
+    // Bersihkan sisa prefix [Nama] dari data lama
     if (entry.originalName) {
       var sentPrefix = '[' + entry.originalName + '] ';
+      
       if (message.indexOf(sentPrefix) === 0) {
+        // Kasus 1: prefix exact match (nama normal seperti [Roze])
         message = message.substring(sentPrefix.length);
       } else {
+        // Kasus 2: cek versi nama dari kamus (Roze vs Rozé, dll)
+        var cleaned = false;
         nameDict.forEach(function(d) {
-          if (d.source === entry.originalName && d.target.trim()) {
+          if (!cleaned && d.source === entry.originalName && d.target.trim()) {
             var altPrefix = '[' + d.target + '] ';
             if (message.indexOf(altPrefix) === 0) {
               message = message.substring(altPrefix.length);
+              cleaned = true;
             }
           }
         });
+        
+        // Kasus 3: nama mengandung ] (\v[117], \n[1], dll)
+        // prefix-nya gagal di-strip, tapi ] penutupnya masih nempel di awal
+        if (!cleaned && entry.originalName.indexOf(']') !== -1 && message.charAt(0) === ']') {
+          message = message.substring(1).replace(/^\s+/, '');
+        }
       }
     }
 
