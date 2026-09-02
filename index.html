@@ -2202,32 +2202,25 @@ function restoreFromBackup() {
   };
   reader.readAsText(fileInput);
 }
-/* Fungsi untuk merakit ulang JSON (Sudah support ganti nama karakter) */
+/* Fungsi untuk merakit ulang JSON — Selalu format {name, message} */
 function rebuildJson(file, nameDict) {
-  var isObjectArray = file.entries.length > 0 && file.entries[0].originalName;
+  return file.entries.map(function(entry) {
+    var finalName = '';
 
-    if (isObjectArray) {
-    return file.entries.map(function(entry) {
-      var obj = {};
-      
-      if (entry.originalName) {
-        var finalName = entry.originalName;
-        var dictMatch = nameDict.find(function(d) { return d.source === entry.originalName; });
-        if (dictMatch && dictMatch.target.trim() !== '') {
-          finalName = dictMatch.target; 
-        }
-        obj.name = finalName;
+    if (entry.originalName) {
+      var dictMatch = nameDict.find(function(d) { return d.source === entry.originalName; });
+      if (dictMatch && dictMatch.target.trim() !== '') {
+        finalName = dictMatch.target;
+      } else {
+        finalName = entry.originalName;
       }
-      
-      obj.message = entry.translated || entry.original;
-      
-      return obj;
-    });
-  } else {
-    return file.entries.map(function(entry) {
-      return entry.translated || entry.original;
-    });
-  }
+    }
+
+    return {
+      name: finalName,
+      message: entry.translated || entry.original
+    };
+  });
 }
 async function exportTranslated() {
   var project = getCurrentProject();
