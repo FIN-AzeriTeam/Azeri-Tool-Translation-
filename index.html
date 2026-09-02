@@ -2217,9 +2217,22 @@ function rebuildJson(file, nameDict) {
     }
 
     var message = entry.translated || entry.original;
-    // Safety: hapus sisa [Nama] yang mungkin masih tersimpan di data lama
+
+    // Safety: hapus sisa prefix [Nama] dari data lama
     if (entry.originalName) {
-      message = message.replace(/^\[.*?\]\s*/, '');
+      var sentPrefix = '[' + entry.originalName + '] ';
+      if (message.indexOf(sentPrefix) === 0) {
+        message = message.substring(sentPrefix.length);
+      } else {
+        nameDict.forEach(function(d) {
+          if (d.source === entry.originalName && d.target.trim()) {
+            var altPrefix = '[' + d.target + '] ';
+            if (message.indexOf(altPrefix) === 0) {
+              message = message.substring(altPrefix.length);
+            }
+          }
+        });
+      }
     }
 
     return {
