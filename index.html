@@ -3026,7 +3026,7 @@ async function startTranslation() {
           '\nWAJIB gunakan kamus nama di atas. JANGAN mengubah atau menerjemahkan nama karakter selain sesuai kamus ini.\n';
       }
 
-      var fullPrompt = prompt + glossarySection + nameDictSection + '\n[TEKS]\n' + textBlock;
+      var fullPrompt = prompt + glossarySection + nameDictSection + speakerSection + '\n[TEKS]\n' + textBlock;
 
       try {
         var resultText = await callGeminiAPI(fullPrompt, model, APP.settings.apiKey);
