@@ -1324,12 +1324,14 @@ select.form-input { cursor: pointer; }
       <i class="fas fa-plus"></i> Tambah
     </button>
     <div class="divider"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:.82rem;color:var(--text-secondary)">Daftar (<span id="glossaryCountText">0</span>)</span>
-      <button class="btn btn-small btn-secondary" onclick="clearAllGlossary()">
-        <i class="fas fa-trash"></i> Hapus Semua
-      </button>
-    </div>
+    <div style="display:flex;gap:8px">
+    <button class="btn btn-small btn-secondary" onclick="downloadGlossary()">
+    <i class="fas fa-download"></i> Download
+    </button>
+    <button class="btn btn-small btn-secondary" onclick="clearAllGlossary()">
+    <i class="fas fa-trash"></i> Hapus
+  </button>
+</div>
     <div class="glossary-list" id="glossaryListContainer"></div>
   </div>
 </div>
@@ -1404,12 +1406,14 @@ select.form-input { cursor: pointer; }
       <i class="fas fa-plus"></i> Tambah
     </button>
     <div class="divider"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:.82rem;color:var(--text-secondary)">Daftar (<span id="nameDictCountText">0</span>)</span>
-      <button class="btn btn-small btn-secondary" onclick="clearAllNameDict()">
-        <i class="fas fa-trash"></i> Hapus Semua
-      </button>
-    </div>
+    <div style="display:flex;gap:8px">
+    <button class="btn btn-small btn-secondary" onclick="downloadNameDict()">
+    <i class="fas fa-download"></i> Download
+    </button>
+    <button class="btn btn-small btn-secondary" onclick="clearAllNameDict()">
+    <i class="fas fa-trash"></i> Hapus
+  </button>
+</div>
     <div class="glossary-list" id="nameDictListContainer"></div>
   </div>
 </div>
@@ -3314,6 +3318,35 @@ function clearAllNameDict() {
   showToast('Kamus nama dihapus semua', 'success');
    }
 
+function downloadGlossary() {
+  var project = getCurrentProject();
+  if (!project || project.glossary.length === 0) {
+    showToast('Glossary kosong', 'info');
+    return;
+  }
+
+  var content = project.glossary.map(function(g) {
+    return g.source + ' → ' + g.target;
+  }).join('\n');
+
+  downloadFile(project.name + '_glossary.txt', content);
+  showToast('Glossary diunduh', 'success');
+}
+
+function downloadNameDict() {
+  var project = getCurrentProject();
+  if (!project || project.nameDict.length === 0) {
+    showToast('Kamus nama kosong', 'info');
+    return;
+  }
+
+  var content = project.nameDict.map(function(n) {
+    return n.source + ' → ' + n.target;
+  }).join('\n');
+
+  downloadFile(project.name + '_names.txt', content);
+  showToast('Kamus nama diunduh', 'success');
+   }
 /* ============================================================
    SECTION 16: SEARCH & REPLACE
    ============================================================ */
