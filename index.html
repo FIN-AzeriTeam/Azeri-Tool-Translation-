@@ -2990,11 +2990,19 @@ async function startTranslation() {
       getElement('translateBatch').textContent = batchNumber;
       addTranslateLog('Batch ' + batchNumber + ': ' + batch.length + ' baris...', 'info');
 
-      // Bangun teks
+            // Teks murni tanpa prefix nama
       var textBlock = batch.map(function(entry, idx) {
-        var prefix = entry.originalName ? '[' + entry.originalName + '] ' : '';
-        return (idx + 1) + '. ' + prefix + entry.original;
+        return (idx + 1) + '. ' + entry.original;
       }).join('\n');
+
+      // Mapping pembicara terpisah — AI tahu konteks tanpa mencampur ke teks
+      var speakerLines = batch.map(function(entry, idx) {
+        var name = entry.originalName || '-';
+        var dm = nameDict.find(function(d) { return d.source === name; });
+        if (dm && dm.target.trim()) name = dm.target;
+        return (idx + 1) + '. ' + name;
+      }).join('\n');
+      var speakerSection = '\n[PEMBICARA PER BARIS]\n' + speakerLines + '\nIni hanya referensi siapa yang berbicara. JANGAN tulis nama pembicara di hasil terjemahan.\n';
 
     // Bangun glossary section — hanya kata yang muncul di batch ini
       var glossarySection = '';
@@ -3039,6 +3047,20 @@ async function startTranslation() {
             addTranslateLog('Format nomor tidak terdeteksi, menggunakan parse baris langsung', 'info');
           }
           }
+                 // Validasi: jumlah baris hasil harus sama dengan batch
+        if (resultLines.length !== batch.length) {
+          addTranslateLog('Jumlah baris tidak cocok: dapat ' + resultLines.length + ', harap ' + batch.length + '. Retry...', 'error');
+          i -= batchSize;
+          if (!batch._retryCount) batch._retryCount = 0;
+          batch._retryCount++;
+          if (batch._retryCount <= 2) {
+            addTranslateLog('Retry ' + batch._retryCount + '/2...', 'error');
+            await sleep(currentDelay * 1000);
+            continue;
+          }
+          addTranslateLog('Retry gagal 2x, skip batch ini', 'error');
+          continue;
+         }
          batch.forEach(function(entry, idx) {
         if (resultLines[idx]) {
           var translated = resultLines[idx].replace(/^\d+[\.\)]\s*/, '').trim();
