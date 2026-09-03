@@ -2981,6 +2981,7 @@ async function startTranslation() {
     getElement('translateFileName').textContent = fileData.file.name;
     addTranslateLog('\u25B6 File ' + (fi + 1) + '/' + allEntries.length + ': ' + fileData.file.name + ' (' + fileData.entries.length + ' baris)', 'info');
 
+    var batchRetries = {};
     // Loop per batch dalam file ini
     for (var i = 0; i < fileData.entries.length; i += batchSize) {
       if (APP.translationCancelled) break;
@@ -3070,40 +3071,37 @@ async function startTranslation() {
         renderFileList();
 
         } catch (error) {
-        addTranslateLog('Error batch ' + batchNumber + ': ' + error.message, 'error');
+        // Inisialisasi counter untuk batch ini
+        if (!batchRetries[batchNumber]) batchRetries[batchNumber] = 0;
+        batchRetries[batchNumber]++;
 
-        // Handle rate limit — adaptive delay + retry
-        if (error.message.indexOf('429') !== -1 || error.message.indexOf('RATE_LIMIT') !== -1 || error.message.indexOf('quota') !== -1) {
-          currentDelay = Math.min(30, currentDelay + 3);
-          getElement('translateDelay').textContent = currentDelay;
-          addTranslateLog('Rate limited! Delay dinaikkan ke ' + currentDelay + 's. Menunggu...', 'error');
-          await sleep(currentDelay * 1000);
-          i -= batchSize; // Ulangi batch ini
-          continue;
-        }
-
-        // Handle invalid API key — stop total
+        // 1. Fatal Error: Invalid API Key -> STOP TOTAL
         if (error.message.indexOf('API key') !== -1 || error.message.indexOf('invalid') !== -1 || error.message.indexOf('UNAUTHENTICATED') !== -1) {
           addTranslateLog('API Key tidak valid! Dihentikan.', 'error');
           break;
         }
 
-        // Handle server error (500, 503) — retry 2x sebelum skip
-        if (error.message.indexOf('500') !== -1 || error.message.indexOf('503') !== -1 || error.message.indexOf('SERVER_ERROR') !== -1) {
-          if (!batch._retryCount) batch._retryCount = 0;
-          batch._retryCount++;
-          if (batch._retryCount <= 2) {
-            addTranslateLog('Server error, retry ' + batch._retryCount + '/2...', 'error');
-            await sleep(5000);
-            i -= batchSize;
-            continue;
-          }
-          addTranslateLog('Retry gagal 2x, skip batch ini.', 'error');
+        // 2. High Demand / Rate Limit (429) -> Naikkan Delay & Retry
+        if (error.message.indexOf('429') !== -1 || error.message.indexOf('RATE_LIMIT') !== -1 || error.message.indexOf('quota') !== -1 || error.message.toLowerCase().indexOf('high demand') !== -1) {
+          currentDelay = Math.min(30, currentDelay + 3); // Max 30s
+          getElement('translateDelay').textContent = currentDelay;
+          addTranslateLog('High Demand! Delay dinaikkan ke ' + currentDelay + 's.', 'error');
+          await sleep(currentDelay * 1000);
+        } else {
+          // 3. Error Lain (Network / Server 500) -> Tunggu 5s
+          await sleep(5000);
+        }
+
+        // 4. Cek batas retry (Max 5x)
+        if (batchRetries[batchNumber] <= 5) {
+          addTranslateLog('Retry batch ' + batchNumber + ' (' + batchRetries[batchNumber] + '/5): ' + error.message, 'error');
+          i -= batchSize; // Mundur agar batch ini diulang
           continue;
         }
 
-        // Error lainnya — skip batch
-        addTranslateLog('Skip batch, lanjut...', 'info');
+        // 5. Sudah 5x gagal total -> Skip
+        addTranslateLog('Batch ' + batchNumber + ' gagal total setelah 5x retry. Skip.', 'error');
+        continue;
       }
       // Delay antar request
       if (i + batchSize < fileData.entries.length && !APP.translationCancelled && currentDelay > 0) {
